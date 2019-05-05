@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include "AI/PITokenManager.h"
 #include "CoreMinimal.h"
 #include "Engine/GameInstance.h"
 #include "PISaveGame.h"
@@ -39,6 +40,9 @@ private:
     UPROPERTY()
     UPISaveGame* m_save_game_object = nullptr;
 
+    UPROPERTY()
+    UPITokenManager* m_token_manager = nullptr;
+
 public:
     UFUNCTION(BlueprintCallable)
     bool GetIsTutorialEnabled();
@@ -63,4 +67,7 @@ public:
 
     UFUNCTION(BlueprintCallable)
     TArray<FPISaveFileInfo> GetAllSaveFilesFromDisk();
+
+    UFUNCTION(BlueprintCallable)
+    UPITokenManager* GetAITokenManager();
 };
