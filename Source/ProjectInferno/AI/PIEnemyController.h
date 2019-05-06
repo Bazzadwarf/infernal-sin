@@ -47,6 +47,11 @@ private:
               Meta = (AllowPrivateAccess = "true", DisplayName = "Attack Token Type"))
     EPIEnemyAttackTokenType m_attack_token_type;
 
+    UPROPERTY(EditDefaultsOnly,
+              Category = "Animations|Attacks",
+              Meta = (AllowPrivateAccess = "true", DisplayName = "Attack Animations"))
+    TArray<UAnimMontage*> m_attack_animations;
+
     bool m_has_attack_token = false;
 
     bool m_is_running = false;
@@ -79,6 +84,9 @@ public:
     bool HasAttackToken();
 
     UFUNCTION(BlueprintCallable)
+    void ReleaseAttackToken();
+
+    UFUNCTION(BlueprintCallable)
     APIEnemy* GetEnemy();
 
     UFUNCTION(BlueprintCallable)
@@ -104,4 +112,7 @@ public:
 
     UFUNCTION()
     void OnDeath(FPIDamageInfo info);
+
+    UFUNCTION()
+    const TArray<UAnimMontage*>& GetAttackAnimationsArray();
 };

@@ -73,6 +73,7 @@ void APIEnemyController::OnPerceptionUpdated(const TArray<AActor*>& actors)
             else
             {
                 m_player_reference = nullptr;
+                ReleaseAttackToken();
             }
         }
     }
@@ -87,13 +88,7 @@ void APIEnemyController::StopAttack()
 {
     m_is_attacking = false;
 
-    if (auto game_instance = Cast<UPIGameInstance>(UGameplayStatics::GetGameInstance(GetWorld())))
-    {
-        if (m_has_attack_token)
-        {
-            game_instance->GetAITokenManager()->ReleaseToken(m_attack_token_type);
-        }
-    }
+    ReleaseAttackToken();
 }
 
 bool APIEnemyController::IsAttacking()
@@ -121,6 +116,16 @@ bool APIEnemyController::HasAttackToken()
     return m_has_attack_token;
 }
 
+void APIEnemyController::ReleaseAttackToken()
+{
+    if (m_has_attack_token)
+    {
+        auto game_instance = Cast<UPIGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
+        game_instance->GetAITokenManager()->ReleaseToken(m_attack_token_type);
+        m_has_attack_token = false;
+    }
+}
+
 APIEnemy* APIEnemyController::GetEnemy()
 {
     return Cast<APIEnemy>(GetCharacter());
@@ -146,14 +151,7 @@ void APIEnemyController::StartStun()
     m_is_stunned = true;
     // TODO: Play stun anim montage
 
-    if (auto game_instance = Cast<UPIGameInstance>(UGameplayStatics::GetGameInstance(GetWorld())))
-    {
-        if (m_has_attack_token)
-        {
-            game_instance->GetAITokenManager()->ReleaseToken(m_attack_token_type);
-            m_has_attack_token = false;
-        }
-    }
+    ReleaseAttackToken();
 }
 
 void APIEnemyController::EndStun()
@@ -173,12 +171,10 @@ void APIEnemyController::OnDamaged(FPIDamageInfo info)
 
 void APIEnemyController::OnDeath(FPIDamageInfo info)
 {
-    if (auto game_instance = Cast<UPIGameInstance>(UGameplayStatics::GetGameInstance(GetWorld())))
-    {
-        if (m_has_attack_token)
-        {
-            game_instance->GetAITokenManager()->ReleaseToken(m_attack_token_type);
-            m_has_attack_token = false;
-        }
-    }
+    ReleaseAttackToken();
+}
+
+const TArray<UAnimMontage*>& APIEnemyController::GetAttackAnimationsArray()
+{
+    return m_attack_animations;
 }
