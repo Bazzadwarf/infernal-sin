@@ -23,6 +23,7 @@ AProjectInfernoBoss::AProjectInfernoBoss()
 
     GetHealthComponent()->SetMaxHealth(1000);
     GetHealthComponent()->OnDeath.BindUFunction(this, "OnDeath");
+    GetHealthComponent()->OnDamage.BindUFunction(this, "OnDamage");
 }
 
 // Called when the game starts or when spawned
@@ -97,4 +98,9 @@ void AProjectInfernoBoss::OnDeath()
         m_boss_health_widget->RemoveFromViewport();
         m_boss_health_widget = nullptr;
     }
+}
+
+void AProjectInfernoBoss::OnDamage()
+{
+    GetController<APIBossController>()->SetCurrentPhase();
 }

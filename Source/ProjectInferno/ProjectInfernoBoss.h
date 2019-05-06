@@ -23,6 +23,10 @@ private:
     FText m_boss_name;
 
 public:
+    UPROPERTY(EditAnywhere, Category = "Succubus", Meta = (DisplayName = "Teleporters"))
+    TArray<class APITeleporter*> m_teleporters;
+
+public:
     AProjectInfernoBoss();
 
     virtual void Tick(float delta_time) override;
@@ -41,6 +45,9 @@ public:
 
     UFUNCTION()
     virtual void OnDeath();
+
+    UFUNCTION()
+    virtual void OnDamage();
 
 protected:
     virtual void BeginPlay() override;

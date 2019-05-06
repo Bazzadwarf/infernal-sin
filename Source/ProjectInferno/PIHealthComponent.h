@@ -36,7 +36,7 @@ class PROJECTINFERNO_API UPIHealthComponent : public UActorComponent
     GENERATED_BODY()
 public:
     FOnDeathDelegate OnDeath;
-    FOnDamagedDelegate OnDamaged;
+    FOnDamagedDelegate OnDamage;
 
 private:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))

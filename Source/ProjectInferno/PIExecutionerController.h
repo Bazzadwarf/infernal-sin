@@ -18,21 +18,43 @@ private:
 public:
     void Tick(float delta_time) override;
 
-    BossPhases GetCurrentPhase() override;
+    void SetCurrentPhase() override;
 
     void Idle(float delta_time) override;
 
     void Phase1(float delta_time) override;
 
+    void Phase1Melee() override;
+
+    void Phase1Ranged() override;
+
     void Phase2(float delta_time) override;
+
+    void Phase2Melee() override;
+
+    void Phase2Ranged() override;
 
     void Phase3(float delta_time) override;
 
+    void Phase3Melee() override;
+
+    void Phase3Ranged() override;
+
     void Phase4(float delta_time) override;
 
-    void Phase1Melee();
+    void Phase4Melee() override;
 
-    void Phase2Melee();
+    void Phase4Ranged() override;
 
-    void Phase3Melee();
+    int randomPick = 6;
+
+    BossStates random[6] = {BossStates::ConeProjectiles,
+                            BossStates::AOEProjectiles,
+                            BossStates::WaveAOEProjectiles,
+                            BossStates::SwipeRightToLeft,
+                            BossStates::SwipeLeftToRight,
+                            BossStates::Attacking};
+
+protected:
+    void BeginPlay() override;
 };

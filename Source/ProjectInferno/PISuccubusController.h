@@ -3,6 +3,7 @@
 #pragma once
 
 #include "PIBossController.h"
+#include "PITeleporter.h"
 #include "PISuccubusController.generated.h"
 
 /**
@@ -13,10 +14,18 @@ class PROJECTINFERNO_API APISuccubusController : public APIBossController
 {
     GENERATED_BODY()
 
+private:
+    float m_timer = 0;
+    bool m_started = false;
+
+    float m_teleport_timer = 0;
+    int m_current_teleporter = 0;
+    int m_last_teleporter = 0;
+
 public:
     void Tick(float delta_time) override;
 
-    BossPhases GetCurrentPhase() override;
+    void SetCurrentPhase() override;
 
     void Idle(float delta_time) override;
 
@@ -25,6 +34,12 @@ public:
     void Phase2(float delta_time) override;
 
     void Phase3(float delta_time) override;
+
+    void Teleport(int teleport_num);
+
+    void Phase1Melee();
+
+    void Phase3Melee();
 
 protected:
     void BeginPlay() override;

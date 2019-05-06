@@ -62,8 +62,19 @@ private:
     TArray<AActor*> m_hit_actors;
 
 protected:
+    UPROPERTY(EditDefaultsOnly,
+              Category = "Projectile",
+              meta = (AllowPrivateAccess = "true", DisplayName = "Num of AOE Projectiles"))
+    int m_num_aoe = 16;
+
+    UPROPERTY(EditDefaultsOnly,
+              Category = "Projectile",
+              meta = (AllowPrivateAccess = "true", DisplayName = "Num of Wave Projectiles"))
+    int m_num_wave = 16;
+
     BossPhases m_current_phase;
     BossStates m_current_state;
+    BossStates m_previous_state;
     BossStates m_previous_attack;
     PlayerSide m_player_side = PlayerSide::Front;
 
@@ -112,21 +123,41 @@ public:
     UFUNCTION(BlueprintCallable)
     virtual void Kill();
 
-    virtual BossPhases GetCurrentPhase();
+    BossPhases GetCurrentPhase();
+
+    virtual void SetCurrentPhase();
 
     virtual void Idle(float delta_time);
 
     virtual void Phase1(float delta_time);
 
+    virtual void Phase1Melee();
+
+    virtual void Phase1Ranged();
+
     virtual void Phase2(float delta_time);
+
+    virtual void Phase2Melee();
+
+    virtual void Phase2Ranged();
 
     virtual void Phase3(float delta_time);
 
+    virtual void Phase3Melee();
+
+    virtual void Phase3Ranged();
+
     virtual void Phase4(float delta_time);
+
+    virtual void Phase4Melee();
+
+    virtual void Phase4Ranged();
 
     AProjectInfernoPlayerCharacter* GetPlayer();
 
     FRotator GetPlayerDirection();
+
+    FVector GetPlayerLocation();
 
     float GetPlayerDistance();
 
@@ -140,11 +171,16 @@ public:
 
     FVector GetPosition();
 
+    void SetPosition(FVector position);
+
     UFUNCTION(BlueprintCallable)
     void IsAttacking(bool is_attacking);
 
     UFUNCTION(BlueprintCallable)
     void SetIdle();
+
+    UFUNCTION(BlueprintCallable)
+    void PerformRangedAttack();
 
     UFUNCTION(BlueprintCallable)
     void HomingProjectiles();
@@ -159,7 +195,13 @@ public:
     void SpawnerProjectiles();
 
     UFUNCTION(BlueprintCallable)
-    void AOEProjectiles();
+    void AOEProjectiles(int projectiles);
+
+    UFUNCTION(BlueprintCallable)
+    void WaveAOEProjectiles(int projectiles);
+
+    UFUNCTION(BlueprintCallable)
+    void RandAOEProjectiels(int projectiles);
 
     UFUNCTION(BlueprintCallable)
     void ConeProjectiles();
@@ -168,7 +210,16 @@ public:
     void ConeProjectilesReverse();
 
     UFUNCTION(BlueprintCallable)
+    void SwipeLeftToRight();
+
+    UFUNCTION(BlueprintCallable)
+    void SwipeRightToLeft();
+
+    UFUNCTION(BlueprintCallable)
     void SpiralProjectiles();
+
+    UFUNCTION(BlueprintCallable)
+    void FrontalBarage();
 
     void Fire(FVector location,
               FRotator rotation,
