@@ -33,6 +33,8 @@ APIBossController::APIBossController()
 void APIBossController::BeginPlay()
 {
     Super::BeginPlay();
+
+    m_current_phase = BossPhases::Phase_1;
 }
 
 void APIBossController::Tick(float delta_time)
@@ -40,11 +42,6 @@ void APIBossController::Tick(float delta_time)
     Super::Tick(delta_time);
 
     UpdateControlRotation(delta_time);
-
-    if (m_player_detected)
-    {
-        m_current_phase = GetCurrentPhase();
-    }
 }
 
 void APIBossController::Possess(APawn* pawn)
@@ -95,7 +92,12 @@ void APIBossController::Kill()
 
 BossPhases APIBossController::GetCurrentPhase()
 {
-    return BossPhases::Idle_Phase;
+    return m_current_phase;
+}
+
+void APIBossController::SetCurrentPhase()
+{
+    m_current_phase = BossPhases::Idle_Phase;
 }
 
 void APIBossController::Idle(float delta_time)
@@ -107,7 +109,23 @@ void APIBossController::Phase1(float delta_time)
 {
 }
 
+void APIBossController::Phase1Melee()
+{
+}
+
+void APIBossController::Phase1Ranged()
+{
+}
+
 void APIBossController::Phase2(float delta_time)
+{
+}
+
+void APIBossController::Phase2Melee()
+{
+}
+
+void APIBossController::Phase2Ranged()
 {
 }
 
@@ -115,7 +133,23 @@ void APIBossController::Phase3(float delta_time)
 {
 }
 
+void APIBossController::Phase3Melee()
+{
+}
+
+void APIBossController::Phase3Ranged()
+{
+}
+
 void APIBossController::Phase4(float delta_time)
+{
+}
+
+void APIBossController::Phase4Melee()
+{
+}
+
+void APIBossController::Phase4Ranged()
 {
 }
 
@@ -127,6 +161,11 @@ AProjectInfernoPlayerCharacter* APIBossController::GetPlayer()
 FRotator APIBossController::GetPlayerDirection()
 {
     return (GetPlayer()->GetActorLocation() - GetPosition()).Rotation();
+}
+
+FVector APIBossController::GetPlayerLocation()
+{
+    return GetPlayer()->GetActorLocation();
 }
 
 float APIBossController::GetPlayerDistance()
@@ -163,6 +202,11 @@ FVector APIBossController::GetPosition()
     return GetPawn()->GetActorLocation();
 }
 
+void APIBossController::SetPosition(FVector position)
+{
+    GetPawn()->SetActorLocation(position);
+}
+
 void APIBossController::IsAttacking(bool is_attacking)
 {
     m_attacking = is_attacking;
@@ -172,6 +216,32 @@ void APIBossController::SetIdle()
 {
     m_current_state = BossStates::Idle;
     m_hit_actors.Empty();
+}
+
+void APIBossController::PerformRangedAttack()
+{
+    UE_LOG(LogTemp, Warning, TEXT("Perform Ranged Attack Called"));
+    int breakpoint;
+    breakpoint = 1;
+    switch (m_current_phase)
+    {
+        case BossPhases::Idle_Phase:
+            break;
+        case BossPhases::Phase_1:
+            Phase1Ranged();
+            break;
+        case BossPhases::Phase_2:
+            Phase2Ranged();
+            break;
+        case BossPhases::Phase_3:
+            Phase3Ranged();
+            break;
+        case BossPhases::Phase_4:
+            Phase4Ranged();
+            break;
+        default:
+            break;
+    }
 }
 
 BossStates APIBossController::GetCurrentState()
@@ -233,7 +303,7 @@ void APIBossController::SpawnerProjectiles()
     }
 }
 
-void APIBossController::AOEProjectiles()
+void APIBossController::AOEProjectiles(int projectiles)
 {
     if (m_slow_projectile && GetWorld())
     {
@@ -242,11 +312,67 @@ void APIBossController::AOEProjectiles()
         spawn_params.Instigator = this->Instigator;
 
         auto rotation = GetPlayerDirection();
+        auto playerHeight = GetPlayerLocation();
+        auto position = GetPosition();
+        auto degreesInc = 360.0f / projectiles;
 
-        for (int i = 0; i < 24; i++)
+        for (int i = 0; i < projectiles; i++)
         {
-            Fire(GetPosition(), {rotation.Pitch + 1, rotation.Yaw, 0}, spawn_params, m_slow_projectile);
-            rotation.Add(0, 15, 0);
+            Fire(
+                FVector(position.X, position.Y, playerHeight.Z), {0, rotation.Yaw, 0}, spawn_params, m_slow_projectile);
+            rotation.Add(0, degreesInc, 0);
+        }
+    }
+}
+
+void APIBossController::WaveAOEProjectiles(int projectiles)
+{
+    if (m_slow_projectile && GetWorld())
+    {
+        if (!GetWorldTimerManager().TimerExists(m_fire_delay_handle))
+        {
+            auto attack_callback = [&, count = 0, p = projectiles]() mutable {
+                AOEProjectiles(p);
+                count++;
+                if (count == 5)
+                {
+                    GetWorldTimerManager().ClearTimer(m_fire_delay_handle);
+                }
+            };
+
+            GetWorldTimerManager().SetTimer(m_fire_delay_handle, attack_callback, 0.25f, true);
+        }
+    }
+}
+
+void APIBossController::RandAOEProjectiels(int projectiles)
+{
+    if (m_slow_projectile && GetWorld())
+    {
+        if (!GetWorldTimerManager().TimerExists(m_fire_delay_handle))
+        {
+            FActorSpawnParameters spawn_params;
+            spawn_params.Owner = this;
+            spawn_params.Instigator = this->Instigator;
+
+            auto attack_callback = [&, count = 0, projectiles, spawn_params]() mutable {
+                auto position = GetPosition();
+                auto playerHeight = GetPlayerLocation();
+
+                Fire(FVector(position.X, position.Y, GetPlayerLocation().Z),
+                     {0, FMath::RandRange(0.f, 360.f), 0},
+                     spawn_params,
+                     m_slow_projectile);
+
+                count++;
+
+                if (count == projectiles)
+                {
+                    GetWorldTimerManager().ClearTimer(m_fire_delay_handle);
+                }
+            };
+
+            GetWorldTimerManager().SetTimer(m_fire_delay_handle, attack_callback, 0.05f, true);
         }
     }
 }
@@ -361,6 +487,99 @@ void APIBossController::ConeProjectilesReverse()
     }
 }
 
+void APIBossController::SwipeLeftToRight()
+{
+    if (m_rapid_projectile && GetWorld())
+    {
+        if (!GetWorldTimerManager().TimerExists(m_fire_delay_handle))
+        {
+            FActorSpawnParameters spawn_params;
+            spawn_params.Owner = this;
+            spawn_params.Instigator = this->Instigator;
+
+            auto rotation = GetPlayerDirection();
+
+            auto attack_callback = [&, yaw_rotation1 = 30.f, rotation, spawn_params]() mutable {
+                Fire(GetPosition(),
+                     {rotation.Pitch + 1, (rotation.Yaw + yaw_rotation1), 0},
+                     spawn_params,
+                     m_rapid_projectile);
+
+                yaw_rotation1 -= 3.f;
+
+                if (yaw_rotation1 == -30)
+                {
+                    GetWorldTimerManager().ClearTimer(m_fire_delay_handle);
+                }
+            };
+
+            GetWorldTimerManager().SetTimer(m_fire_delay_handle, attack_callback, 0.05f, true);
+        }
+    }
+}
+
+void APIBossController::SwipeRightToLeft()
+{
+    if (m_rapid_projectile && GetWorld())
+    {
+        if (!GetWorldTimerManager().TimerExists(m_fire_delay_handle))
+        {
+            FActorSpawnParameters spawn_params;
+            spawn_params.Owner = this;
+            spawn_params.Instigator = this->Instigator;
+
+            auto rotation = GetPlayerDirection();
+
+            auto attack_callback = [&, yaw_rotation1 = -30.f, rotation, spawn_params]() mutable {
+                Fire(GetPosition(),
+                     {rotation.Pitch + 1, (rotation.Yaw + yaw_rotation1), 0},
+                     spawn_params,
+                     m_rapid_projectile);
+
+                yaw_rotation1 += 3.f;
+
+                if (yaw_rotation1 == 30)
+                {
+                    GetWorldTimerManager().ClearTimer(m_fire_delay_handle);
+                }
+            };
+
+            GetWorldTimerManager().SetTimer(m_fire_delay_handle, attack_callback, 0.05f, true);
+        }
+    }
+}
+
+void APIBossController::FrontalBarage()
+{
+    if (m_rapid_projectile && GetWorld())
+    {
+        if (!GetWorldTimerManager().TimerExists(m_fire_delay_handle))
+        {
+            FActorSpawnParameters spawn_params;
+            spawn_params.Owner = this;
+            spawn_params.Instigator = this->Instigator;
+
+            auto attack_callback = [&, count = 0, spawn_params]() mutable {
+                auto rotation = GetPlayerDirection();
+
+                Fire(GetPosition(),
+                     {rotation.Pitch + FMath::RandRange(0.f, 7.5f), (rotation.Yaw + FMath::RandRange(-7.5f, 7.5f)), 0},
+                     spawn_params,
+                     m_rapid_projectile);
+
+                count++;
+
+                if (count == 60)
+                {
+                    GetWorldTimerManager().ClearTimer(m_fire_delay_handle);
+                }
+            };
+
+            GetWorldTimerManager().SetTimer(m_fire_delay_handle, attack_callback, 0.05f, true);
+        }
+    }
+}
+
 void APIBossController::Fire(FVector location,
                              FRotator rotation,
                              FActorSpawnParameters spawn_params,
@@ -400,15 +619,24 @@ void APIBossController::OnWeaponHit(UPrimitiveComponent* hit_component,
     {
         case BossStates::LeftAttack:
         case BossStates::RightAttack:
-        case BossStates::RamAttack:
+        case BossStates::Melee5:
         case BossStates::AxeStompAttack:
             damage = weapon_properties.GetKeyValue(EPIWeaponDataKey::MeleeLightDamage).Get(0.0f);
             break;
-        case BossStates::OverheadAttack:
-        case BossStates::SweepAttack:
+        case BossStates::Melee3:
+        case BossStates::Melee4:
             damage = weapon_properties.GetKeyValue(EPIWeaponDataKey::MeleeHeavyDamage).Get(0.0f);
             break;
     }
+
+    // if (weapon->GetParticleSystem() != nullptr)
+    //{
+    //    UGameplayStatics::SpawnEmitterAtLocation(boss,
+    //                                             boss->GetWeapon()->GetParticleSystem(),
+    //                                             weapon->ActorToWorld().GetLocation() + sweep_result.ImpactPoint,
+    //                                             sweep_result.ImpactPoint.Rotation(),
+    //                                             true);
+    //}
 
     other_actor->TakeDamage(damage, FPointDamageEvent{}, this, weapon);
 }

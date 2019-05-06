@@ -5,21 +5,20 @@
 #include "AIController.h"
 #include "CoreMinimal.h"
 #include "PIBossEnums.h"
+#include "PITeleporter.h"
 #include "Perception/AIPerceptionComponent.h"
-#include "Perception/AISenseConfig_Sight.h"
 #include "ProjectInfernoBoss.h"
 #include "ProjectInfernoPlayerCharacter.h"
 #include "ProjectInfernoProjectile.h"
-#include "TimerManager.h"
-#include "PIBossController.generated.h"
+#include "PIExecutionerPart2Controller.generated.h"
 
-/**
- *
- */
 UCLASS()
-class PROJECTINFERNO_API APIBossController : public AAIController
+class PROJECTINFERNO_API APIExecutionerPart2Controller : public AAIController
 {
     GENERATED_BODY()
+
+public:
+    UBoxComponent* m_falling_box;
 
 private:
     UPROPERTY(EditDefaultsOnly,
@@ -39,11 +38,6 @@ private:
 
     UPROPERTY(EditDefaultsOnly,
               Category = "Projectile",
-              meta = (AllowPrivateAccess = "true", DisplayName = "Charm Projectile"))
-    TSubclassOf<class AProjectInfernoProjectile> m_charm_projectile;
-
-    UPROPERTY(EditDefaultsOnly,
-              Category = "Projectile",
               meta = (AllowPrivateAccess = "true", DisplayName = "Rapid Projectile"))
     TSubclassOf<class AProjectInfernoProjectile> m_rapid_projectile;
 
@@ -57,64 +51,55 @@ private:
               meta = (AllowPrivateAccess = "true", DisplayName = "Bounce Projectile"))
     TSubclassOf<class AProjectInfernoProjectile> m_bounce_projectile;
 
-    FTimerHandle m_fire_delay_handle;
+    int m_current_teleporter = 0;
+
+    TArray<UActorComponent*> m_actor_comp_array;
 
     TArray<AActor*> m_hit_actors;
-
-protected:
-    UPROPERTY(EditDefaultsOnly,
-              Category = "Projectile",
-              meta = (AllowPrivateAccess = "true", DisplayName = "Num of AOE Projectiles"))
-    int m_num_aoe = 16;
-
-    UPROPERTY(EditDefaultsOnly,
-              Category = "Projectile",
-              meta = (AllowPrivateAccess = "true", DisplayName = "Num of Wave Projectiles"))
-    int m_num_wave = 16;
 
     BossPhases m_current_phase;
     BossStates m_current_state;
     BossStates m_previous_state;
-    BossStates m_previous_attack;
+
     PlayerSide m_player_side = PlayerSide::Front;
+
+    PlayerSide m_teleporter_side = PlayerSide::Front;
 
     int m_state_counter = 0;
 
     bool m_attacking = false;
 
-public:
-    UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "AI")
+    AProjectInfernoPlayerCharacter* m_player;
+
     bool m_player_detected = false;
 
-    UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "AI")
-    float m_distance_to_player = 3000.0f;
+    float m_attack_delay = 0;
 
-    UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "AI")
-    float m_detection_radius = 3000.0f;
+    float m_stay_close_timer = 0;
 
-    UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "AI")
-    float m_detection_age = 5.0f;
+    bool m_staying_close = false;
 
-    UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "AI")
-    float m_undetect_radius = m_detection_radius + 50.0f;
+    float m_player_far_timer = 0;
 
-    UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "AI")
-    float m_peripheral_vision_angle = 360.0f;
+    FTimerHandle m_fire_delay_handle;
 
-    UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "AI")
-    class UAISenseConfig_Sight* m_sight_config;
+    float m_ranged_yaw = 0;
+    float m_ranged_yaw_2 = 0;
+
+    float m_ranged_timer = 0;
+
+    int m_ranged_counter = 0;
+
+    FVector m_ranged_spawn_pos = FVector{0, 0, 0};
+
+    bool m_ranged = false;
 
 public:
-    APIBossController();
+    APIExecutionerPart2Controller();
 
     virtual void Tick(float delta_time) override;
 
-    virtual void Possess(APawn* pawn) override;
-
     virtual FRotator GetControlRotation() const override;
-
-    UFUNCTION()
-    void PawnDetected(const TArray<AActor*>& pawns);
 
     AProjectInfernoBoss* GetBoss();
 
@@ -131,27 +116,9 @@ public:
 
     virtual void Phase1(float delta_time);
 
-    virtual void Phase1Melee();
-
-    virtual void Phase1Ranged();
-
     virtual void Phase2(float delta_time);
 
-    virtual void Phase2Melee();
-
-    virtual void Phase2Ranged();
-
     virtual void Phase3(float delta_time);
-
-    virtual void Phase3Melee();
-
-    virtual void Phase3Ranged();
-
-    virtual void Phase4(float delta_time);
-
-    virtual void Phase4Melee();
-
-    virtual void Phase4Ranged();
 
     AProjectInfernoPlayerCharacter* GetPlayer();
 
@@ -163,8 +130,17 @@ public:
 
     void ApproachPlayer(float acceptance);
 
+    void StopFollowing();
+
     void ApproachLocation(FVector location, float acceptance);
 
+    float GetTeleporterDistance();
+
+    FRotator GetTeleporterDirection();
+
+    FVector GetTeleporterLocation();
+
+    UFUNCTION(BlueprintCallable)
     void FacePlayer();
 
     void FacePosition(FVector position_to_look);
@@ -174,22 +150,37 @@ public:
     void SetPosition(FVector position);
 
     UFUNCTION(BlueprintCallable)
-    void IsAttacking(bool is_attacking);
+    void Unfocus();
+
+    UFUNCTION(BlueprintCallable)
+    void Lunge2();
+
+    UFUNCTION(BlueprintCallable)
+    void StartFlying();
+
+    UFUNCTION(BlueprintCallable)
+    void StopFlying();
 
     UFUNCTION(BlueprintCallable)
     void SetIdle();
 
     UFUNCTION(BlueprintCallable)
-    void PerformRangedAttack();
+    void EnableRootMotionRotation();
+
+    UFUNCTION(BlueprintCallable)
+    void DisableRootMotionRotation();
+
+    UFUNCTION(BlueprintCallable)
+    void EnableBodyCollider();
+
+    UFUNCTION(BlueprintCallable)
+    void DisableBodyCollider();
+
+    UFUNCTION(BlueprintCallable)
+    void SetRanged();
 
     UFUNCTION(BlueprintCallable)
     void HomingProjectiles();
-
-    UFUNCTION(BlueprintCallable)
-    void CharmProjectiles();
-
-    UFUNCTION(BlueprintCallable)
-    void RapidProjectiles();
 
     UFUNCTION(BlueprintCallable)
     void SpawnerProjectiles();
@@ -198,33 +189,27 @@ public:
     void AOEProjectiles(int projectiles);
 
     UFUNCTION(BlueprintCallable)
-    void WaveAOEProjectiles(int projectiles);
+    void WaveAOEProjectiles(int projectiles, float delta_time);
 
     UFUNCTION(BlueprintCallable)
-    void RandAOEProjectiels(int projectiles);
+    void RandAOEProjectiels(int projectiles, float delta_time);
 
     UFUNCTION(BlueprintCallable)
-    void ConeProjectiles();
+    void SwipeLeftToRight(float delta_time);
 
     UFUNCTION(BlueprintCallable)
-    void ConeProjectilesReverse();
+    void SwipeRightToLeft(float delta_time);
 
     UFUNCTION(BlueprintCallable)
-    void SwipeLeftToRight();
+    void ConeProjectiles(float delta_time);
 
     UFUNCTION(BlueprintCallable)
-    void SwipeRightToLeft();
+    void SpiralProjectiles(float delta_time);
 
     UFUNCTION(BlueprintCallable)
-    void SpiralProjectiles();
+    void FrontalBarrage(float delta_time);
 
-    UFUNCTION(BlueprintCallable)
-    void FrontalBarage();
-
-    void Fire(FVector location,
-              FRotator rotation,
-              FActorSpawnParameters spawn_params,
-              TSubclassOf<class AProjectInfernoProjectile> projectile_type);
+    void Fire(FVector location, FRotator rotation, TSubclassOf<class AProjectInfernoProjectile> projectile_type);
 
     UFUNCTION(BlueprintCallable)
     BossStates GetCurrentState();
@@ -237,7 +222,21 @@ public:
                              bool b_from_sweep,
                              const FHitResult& sweep_result);
 
+    UFUNCTION()
+    virtual void OnFallingHit(UPrimitiveComponent* hit_component,
+                              AActor* other_actor,
+                              UPrimitiveComponent* other_component,
+                              int32 other_body_index,
+                              bool b_from_sweep,
+                              const FHitResult& sweep_result);
+
+    void SetPlayerSide();
+
     bool RotateTowardsPlayer();
+
+    void SetTeleporterSide();
+
+    bool RotateTowardsTeleporter();
 
     void ClearHitActors();
 

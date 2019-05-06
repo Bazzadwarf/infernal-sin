@@ -6,6 +6,15 @@
 #include "Kismet/GameplayStatics.h"
 #include "ProjectInfernoPlayerCharacter.h"
 
+void APIExecutionerController::BeginPlay()
+{
+    Super::BeginPlay();
+
+    GetBoss()->ShowHUD();
+
+    m_current_phase = BossPhases::Phase_1;
+}
+
 void APIExecutionerController::Tick(float delta_time)
 {
     Super::Tick(delta_time);
@@ -34,24 +43,25 @@ void APIExecutionerController::Tick(float delta_time)
     }
 }
 
-BossPhases APIExecutionerController::GetCurrentPhase()
+void APIExecutionerController::SetCurrentPhase()
 {
-    if (GetBoss()->GetHealthPercent() > 0.7f)
+    if (GetBoss()->GetHealthPercent() > 0.7f || GetBoss()->GetHealthPercent() == 1.f)
     {
-        return BossPhases::Phase_1;
+        m_current_phase = BossPhases::Phase_4;
+        m_current_phase = BossPhases::Phase_1;
     }
-
-    if (GetBoss()->GetHealthPercent() > 0.4f)
+    else if (GetBoss()->GetHealthPercent() > 0.4f)
     {
-        return BossPhases::Phase_2;
+        m_current_phase = BossPhases::Phase_2;
     }
-
-    if (GetBoss()->GetHealthPercent() > 0.1f)
+    else if (GetBoss()->GetHealthPercent() > 0.1f)
     {
-        return BossPhases::Phase_3;
+        m_current_phase = BossPhases::Phase_3;
     }
-
-    return BossPhases::Phase_4;
+    else
+    {
+        m_current_phase = BossPhases::Phase_4;
+    }
 }
 
 void APIExecutionerController::Idle(float delta_time)
@@ -63,19 +73,76 @@ void APIExecutionerController::Phase1(float delta_time)
 {
     if (RotateTowardsPlayer())
     {
-        if (GetPlayerDistance() > 400)
+        if (GetPlayerDistance() > 2000)
         {
             if (m_current_state == BossStates::Following || m_current_state == BossStates::Idle)
             {
                 ApproachPlayer(100);
             }
         }
-        else
+        else if (GetPlayerDistance() < 500)
         {
             if (m_current_state == BossStates::Following || m_current_state == BossStates::Idle)
             {
                 Phase1Melee();
             }
+        }
+        else
+        {
+            if (m_current_state == BossStates::Following || m_current_state == BossStates::Idle)
+            {
+                m_current_state = BossStates::Melee5;
+            }
+        }
+    }
+}
+
+void APIExecutionerController::Phase1Melee()
+{
+    ClearHitActors();
+    StopMovement();
+
+    if (m_previous_attack == BossStates::Melee1)
+    {
+        SetFocus(nullptr);
+
+        m_current_state = BossStates::Idle;
+        m_current_state = BossStates::Melee5;
+        m_previous_attack = BossStates::Melee5;
+    }
+    else
+    {
+        SetFocus(nullptr);
+
+        m_current_state = BossStates::Idle;
+        m_current_state = BossStates::Melee1;
+        m_previous_attack = BossStates::Melee1;
+    }
+}
+
+void APIExecutionerController::Phase1Ranged()
+{
+    if (GetPlayerDistance() >= 500)
+    {
+        if (m_previous_attack == BossStates::ConeProjectiles)
+        {
+            FrontalBarage();
+            m_previous_attack = BossStates::Attacking;
+        }
+        if (m_previous_attack == BossStates::SwipeRightToLeft)
+        {
+            ConeProjectiles();
+            m_previous_attack = BossStates::ConeProjectiles;
+        }
+        else if (m_previous_attack == BossStates::SwipeLeftToRight)
+        {
+            SwipeRightToLeft();
+            m_previous_attack = BossStates::SwipeRightToLeft;
+        }
+        else
+        {
+            SwipeLeftToRight();
+            m_previous_attack = BossStates::SwipeLeftToRight;
         }
     }
 }
@@ -84,34 +151,84 @@ void APIExecutionerController::Phase2(float delta_time)
 {
     if (RotateTowardsPlayer())
     {
-        StopMovement();
-        SetFocus(nullptr);
-
-        if (FMath::RandRange(1, 2) != 1)
+        if (GetPlayerDistance() > 2000)
         {
-            if (m_current_state == BossStates::Idle || m_current_state == BossStates::Following)
+            if (m_current_state == BossStates::Following || m_current_state == BossStates::Idle)
             {
-                m_current_state = BossStates::AxeStompAttack;
-                m_previous_attack = BossStates::AxeStompAttack;
+                ApproachPlayer(100);
+            }
+        }
+        else if (GetPlayerDistance() < 500)
+        {
+            if (m_current_state == BossStates::Following || m_current_state == BossStates::Idle)
+            {
+                Phase1Melee();
             }
         }
         else
         {
-            if (GetPlayerDistance() > 400)
+            if (m_current_state == BossStates::Following || m_current_state == BossStates::Idle)
             {
-                if (m_current_state == BossStates::Following || m_current_state == BossStates::Idle)
+                if (m_previous_state == BossStates::StompAttack)
                 {
-                    ApproachPlayer(100);
+                    m_current_state = BossStates::AxeStompAttack;
+                    m_previous_state = BossStates::AxeStompAttack;
                 }
-            }
-            else
-            {
-                if (m_current_state == BossStates::Following || m_current_state == BossStates::Idle)
+                else
                 {
-                    Phase2Melee();
+                    m_current_state = BossStates::StompAttack;
+                    m_previous_state = BossStates::StompAttack;
+                    m_previous_attack = BossStates::WaveAOEProjectiles;
                 }
             }
         }
+    }
+}
+
+void APIExecutionerController::Phase2Melee()
+{
+    ClearHitActors();
+    StopMovement();
+
+    if (FMath::RandRange(1, 2) == 1)
+    {
+        if (m_previous_attack == BossStates::Melee4)
+        {
+            return;
+        }
+
+        SetFocus(nullptr);
+
+        m_current_state = BossStates::Idle;
+        m_current_state = BossStates::Melee4;
+        m_previous_attack = BossStates::Melee4;
+    }
+    else
+    {
+        if (m_previous_attack == BossStates::Melee2)
+        {
+            return;
+        }
+
+        SetFocus(nullptr);
+
+        m_current_state = BossStates::Idle;
+        m_current_state = BossStates::Melee2;
+        m_previous_attack = BossStates::Melee2;
+    }
+}
+
+void APIExecutionerController::Phase2Ranged()
+{
+    if (m_previous_attack == BossStates::AOEProjectiles)
+    {
+        WaveAOEProjectiles(m_num_wave);
+        m_previous_attack = BossStates::WaveAOEProjectiles;
+    }
+    else
+    {
+        AOEProjectiles(m_num_aoe);
+        m_previous_attack = BossStates::AOEProjectiles;
     }
 }
 
@@ -119,70 +236,119 @@ void APIExecutionerController::Phase3(float delta_time)
 {
     if (RotateTowardsPlayer())
     {
-        if (FMath::RandRange(1, 3) != 1)
+        if (GetPlayerDistance() > 1000.0f)
         {
-            if (GetPlayerDistance() > 400)
+            ApproachPlayer(0);
+
+            // This should be switched out for projectiles with Sine waves attached to them
+            if (!GetWorldTimerManager().TimerExists(m_timer_handle))
             {
-                if (m_current_state == BossStates::Following || m_current_state == BossStates::Idle)
-                {
-                    ApproachPlayer(100);
-                }
-            }
-            else
-            {
-                if (m_current_state == BossStates::Following || m_current_state == BossStates::Idle)
-                {
-                    Phase3Melee();
-                }
+                auto attack_callback = [&, p = 16]() mutable { AOEProjectiles(p); };
+
+                GetWorldTimerManager().SetTimer(m_timer_handle, attack_callback, 1.0f, true);
             }
         }
         else
         {
-            if (m_current_state == BossStates::Idle)
+            if (GetWorldTimerManager().TimerExists(m_timer_handle))
             {
-                StopMovement();
-                SetFocus(nullptr);
-
-                if (m_previous_attack == BossStates::AxeStompAttack)
-                {
-                    return;
-                }
-
-                m_current_state = BossStates::AxeStompAttack;
-                m_previous_attack = BossStates::AxeStompAttack;
+                GetWorldTimerManager().ClearTimer(m_timer_handle);
             }
-        }
-    }
-    else
-    {
-        if (m_previous_attack != BossStates::RightAttack && m_previous_attack != BossStates::LeftAttack
-            && GetPlayerDistance() < 400)
-        {
-            if (m_player_side == PlayerSide::Right)
-            {
-                StopMovement();
-                SetFocus(nullptr);
 
-                m_current_state = BossStates::Idle;
-                m_current_state = BossStates::RightAttack;
-                m_previous_attack = BossStates::RightAttack;
+            int rand = FMath::RandRange(0, 100);
+
+            if (rand < 75)
+            {
+                Phase3Melee();
             }
-            else if (m_player_side == PlayerSide::Left)
+            else if (rand >= 75 && rand <= 100)
             {
-                StopMovement();
-                SetFocus(nullptr);
-
-                m_current_state = BossStates::Idle;
-                m_current_state = BossStates::LeftAttack;
-                m_previous_attack = BossStates::LeftAttack;
+                RandAOEProjectiels(60);
             }
         }
     }
 }
 
+void APIExecutionerController::Phase3Melee()
+{
+    ClearHitActors();
+    StopMovement();
+    SetFocus(nullptr);
+
+    if (GetPlayerDistance() < 100.f)
+    {
+        m_current_state = BossStates::Idle;
+        m_current_state = BossStates::StompAttack;
+        m_previous_attack = BossStates::StompAttack;
+        return;
+    }
+
+    int rand = FMath::RandRange(1, 4);
+    SetFocus(nullptr);
+    m_current_state = BossStates::Idle;
+
+    switch (rand)
+    {
+        // Sweep Attack
+        case 1:
+            m_current_state = BossStates::Melee5;
+            m_previous_attack = BossStates::Melee5;
+            break;
+        // Ram Attack
+        case 2:
+            m_current_state = BossStates::Melee2;
+            m_previous_attack = BossStates::Melee2;
+            break;
+        // Left Attack
+        case 3:
+            m_current_state = BossStates::LeftAttack;
+            m_previous_attack = BossStates::LeftAttack;
+            break;
+        // Right Attack
+        case 4:
+            m_current_state = BossStates::RightAttack;
+            m_previous_attack = BossStates::RightAttack;
+            break;
+        default:
+            m_current_state = BossStates::StompAttack;
+            m_previous_attack = BossStates::StompAttack;
+            break;
+    }
+}
+
+void APIExecutionerController::Phase3Ranged()
+{
+}
+
 void APIExecutionerController::Phase4(float delta_time)
 {
     if (RotateTowardsPlayer())
+    {
+        if (GetPlayerDistance() > 1000.0f)
+        {
+            ApproachPlayer(0);
+
+            // This should be switched out for projectiles with Sine waves attached to them
+            if (!GetWorldTimerManager().TimerExists(m_timer_handle))
+            {
+                auto attack_callback = [&, p = 16]() mutable { AOEProjectiles(p); };
+
+                GetWorldTimerManager().SetTimer(m_timer_handle, attack_callback, 1.0f, true);
+            }
+        }
+        else
+        {
+            if (GetWorldTimerManager().TimerExists(m_timer_handle))
+            {
+                GetWorldTimerManager().ClearTimer(m_timer_handle);
+            }
+
+            Phase3Melee();
+            RandAOEProjectiels(60);
+        }
+    }
+
+    /*if (RotateTowardsPlayer())
     {
         if (m_current_state == BossStates::Idle)
         {
@@ -218,82 +384,13 @@ void APIExecutionerController::Phase4(float delta_time)
                 m_previous_attack = BossStates::AxeStompAttack;
             }
         }
-    }
+    }*/
 }
 
-void APIExecutionerController::Phase1Melee()
+void APIExecutionerController::Phase4Melee()
 {
-    ClearHitActors();
-    StopMovement();
-
-    if (FMath::RandRange(1, 2) == 1)
-    {
-        if (m_previous_attack == BossStates::RamAttack)
-        {
-            return;
-        }
-
-        SetFocus(nullptr);
-
-        m_current_state = BossStates::Idle;
-        m_current_state = BossStates::RamAttack;
-        m_previous_attack = BossStates::RamAttack;
-    }
-    else
-    {
-        if (m_previous_attack == BossStates::SweepAttack)
-        {
-            return;
-        }
-
-        SetFocus(nullptr);
-
-        m_current_state = BossStates::Idle;
-        m_current_state = BossStates::SweepAttack;
-        m_previous_attack = BossStates::SweepAttack;
-    }
 }
 
-void APIExecutionerController::Phase2Melee()
+void APIExecutionerController::Phase4Ranged()
 {
-    ClearHitActors();
-    StopMovement();
-    SetFocus(nullptr);
-
-    m_current_state = BossStates::Idle;
-    m_current_state = BossStates::SweepAttack;
-    m_previous_attack = BossStates::SweepAttack;
-}
-
-void APIExecutionerController::Phase3Melee()
-{
-    ClearHitActors();
-    StopMovement();
-
-    if (FMath::RandRange(1, 2) == 1)
-    {
-        if (m_previous_attack == BossStates::RamAttack)
-        {
-            return;
-        }
-
-        SetFocus(nullptr);
-
-        m_current_state = BossStates::Idle;
-        m_current_state = BossStates::RamAttack;
-        m_previous_attack = BossStates::RamAttack;
-    }
-    else
-    {
-        if (m_previous_attack == BossStates::OverheadAttack)
-        {
-            return;
-        }
-
-        SetFocus(nullptr);
-
-        m_current_state = BossStates::Idle;
-        m_current_state = BossStates::OverheadAttack;
-        m_previous_attack = BossStates::OverheadAttack;
-    }
 }

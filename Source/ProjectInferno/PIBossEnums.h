@@ -20,11 +20,11 @@ enum class BossStates : uint8
     Following,
     Attacking,
     Moving,
-    LightAttack,
-    HeavyAttack,
-    OverheadAttack,
-    SweepAttack,
-    RamAttack,
+    Melee1,
+    Melee2,
+    Melee3,
+    Melee4,
+    Melee5,
     LeftAttack,
     RightAttack,
     StompAttack,
@@ -33,10 +33,20 @@ enum class BossStates : uint8
     SpawnerProjectile,
     ConeProjectiles,
     ReversedConeProjectiles,
+    SwipeLeftToRight,
+    SwipeRightToLeft,
     AOEProjectiles,
+    WaveAOEProjectiles,
     SpiralProjectiles,
     BurstProjectiles,
-    Dead
+    Dead,
+    Flying,
+    Resting,
+    Landing,
+    TakingOff,
+    FlyingProjectile1,
+    FlyingProjectile2,
+    FlyingProjectile3
 };
 
 UENUM(BlueprintType)
@@ -44,6 +54,5 @@ enum class PlayerSide : uint8
 {
     Front,
     Left,
-    Right,
-    Back
+    Right
 };
