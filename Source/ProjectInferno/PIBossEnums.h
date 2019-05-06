@@ -54,6 +54,5 @@ enum class PlayerSide : uint8
 {
     Front,
     Left,
-    Right,
-    Back
+    Right
 };

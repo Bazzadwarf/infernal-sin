@@ -10,8 +10,17 @@ void APIExecutionerController::BeginPlay()
 {
     Super::BeginPlay();
 
+    GetBoss()->ShowHUD();
+
     m_current_phase = BossPhases::Phase_1;
 }
+
+//void APIExecutionerController::BeginPlay()
+//{
+//    Super::BeginPlay();
+//
+//    m_current_phase = BossPhases::Phase_1;
+//}
 
 void APIExecutionerController::Tick(float delta_time)
 {
@@ -202,6 +211,10 @@ void APIExecutionerController::Phase2(float delta_time)
                 {
                     m_previous_attack = random[randomPick];
                 }
+            }
+            else
+            {
+                RandAOEProjectiels(60);
             }
         }
     }

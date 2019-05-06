@@ -162,7 +162,7 @@ void APISuccubusController::Phase2(float delta_time)
 void APISuccubusController::Phase3(float delta_time)
 {
     ApproachPlayer(100);
-    //TODO: Edit this to fit the Succubus boss
+    // TODO: Edit this to fit the Succubus boss
     if (RotateTowardsPlayer())
     {
         if (FMath::RandRange(1, 3) != 1)
@@ -193,7 +193,7 @@ void APISuccubusController::Phase3Melee()
 {
     ClearHitActors();
     StopMovement();
-    //TODO: Turns these into attack chains
+    // TODO: Turns these into attack chains
     if (FMath::RandRange(1, 2) == 1)
     {
         if (m_previous_attack == BossStates::Melee5)
@@ -224,7 +224,9 @@ void APISuccubusController::Phase3Melee()
 
 void APISuccubusController::Teleport(int teleport_num)
 {
-    GetBoss()->SetActorLocation(FVector(GetBoss()->m_teleporters[teleport_num]->GetActorLocation().X, GetBoss()->m_teleporters[teleport_num]->GetActorLocation().Y, GetBoss()->GetActorLocation().Z));
+    GetBoss()->SetActorLocation(FVector(GetBoss()->m_teleporters[teleport_num]->GetActorLocation().X,
+                                        GetBoss()->m_teleporters[teleport_num]->GetActorLocation().Y,
+                                        GetBoss()->GetActorLocation().Z));
 }
 
 void APISuccubusController::Phase1Melee()
@@ -234,8 +236,8 @@ void APISuccubusController::Phase1Melee()
 
     if (FMath::RandRange(1, 2) == 1)
     {
-        //Replace with new enums
-        //Flurry attack
+        // Replace with new enums
+        // Flurry attack
 
         /*if (m_previous_attack == BossStates::RamAttack)
         {
@@ -250,8 +252,8 @@ void APISuccubusController::Phase1Melee()
     }
     else
     {
-        //Replace with new enums
-        //Strong attack
+        // Replace with new enums
+        // Strong attack
 
         /*if (m_previous_attack == BossStates::SweepAttack)
         {

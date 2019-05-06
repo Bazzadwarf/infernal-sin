@@ -23,13 +23,18 @@ private:
     FText m_boss_name;
 
 public:
-    UPROPERTY(EditAnywhere, Category = "Succubus", Meta = (DisplayName = "Teleporters"))
+    UPROPERTY(EditAnywhere, Category = "Boss", Meta = (DisplayName = "Teleporters"))
     TArray<class APITeleporter*> m_teleporters;
+
+    UPROPERTY(EditAnywhere, Category = "Executioner", Meta = (DisplayName = "Part 1"))
+    bool m_part1 = true;
 
 public:
     AProjectInfernoBoss();
 
     virtual void Tick(float delta_time) override;
+
+    void ShowHUD();
 
     UFUNCTION()
     float GetHealth();
