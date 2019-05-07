@@ -221,6 +221,22 @@ void APIEnemyController::OnDeath(FPIDamageInfo info)
         character_comp->SetComponentTickEnabled(false);
     }
 
+    if (auto weapon = enemy->GetWeapon())
+    {
+        weapon->GetCollider()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+        weapon->GetCollider()->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+
+        weapon->GetMesh()->SetCollisionProfileName("Ragdoll");
+        weapon->SetActorEnableCollision(true);
+
+        weapon->GetMesh()->SetAllBodiesSimulatePhysics(true);
+        weapon->GetMesh()->SetSimulatePhysics(true);
+        weapon->GetMesh()->WakeAllRigidBodies();
+        weapon->GetMesh()->bBlendPhysics = true;
+
+        weapon->SetLifeSpan(10.0f);
+    }
+
     enemy->SetLifeSpan(10.0f);
 }
 
