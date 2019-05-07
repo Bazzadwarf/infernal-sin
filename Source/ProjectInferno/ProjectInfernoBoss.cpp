@@ -4,6 +4,7 @@
 #include "ConstructorHelpers.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "PIBossController.h"
+#include "PIExecutionerPart2Controller.h"
 #include "Perception/PawnSensingComponent.h"
 
 // Sets default values
@@ -23,6 +24,7 @@ AProjectInfernoBoss::AProjectInfernoBoss()
 
     GetHealthComponent()->SetMaxHealth(1000);
     GetHealthComponent()->OnDeath.BindUFunction(this, "OnDeath");
+    GetHealthComponent()->OnDamage.BindUFunction(this, "OnDamage");
 }
 
 // Called when the game starts or when spawned
@@ -30,6 +32,49 @@ void AProjectInfernoBoss::BeginPlay()
 {
     Super::BeginPlay();
 
+    for (TActorIterator<APITeleporter> teleporter_itr(GetWorld()); teleporter_itr; ++teleporter_itr)
+    {
+        APITeleporter* teleporter = *teleporter_itr;
+        m_teleporters.Add(teleporter);
+    }
+
+    if (auto weapon = GetWeapon())
+    {
+        if (m_part1)
+        {
+            auto controller = GetController<APIBossController>();
+
+            weapon->AttachToComponent(
+                GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, "WeaponSocket");
+
+            if (controller)
+            {
+                weapon->GetCollider()->OnComponentBeginOverlap.AddDynamic(controller, &APIBossController::OnWeaponHit);
+            }
+        }
+        else
+        {
+            auto controller = GetController<APIExecutionerPart2Controller>();
+
+            weapon->AttachToComponent(
+                GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, "WeaponSocket2");
+
+            if (controller)
+            {
+                weapon->GetCollider()->OnComponentBeginOverlap.AddDynamic(controller,
+                                                                          &APIExecutionerPart2Controller::OnWeaponHit);
+                if (controller->m_falling_box)
+                {
+                    controller->m_falling_box->OnComponentBeginOverlap.AddDynamic(
+                        controller, &APIExecutionerPart2Controller::OnFallingHit);
+                }
+            }
+        }
+    }
+}
+
+void AProjectInfernoBoss::ShowHUD()
+{
     // Displays boss HUD UI
     if (m_boss_ui_class != nullptr)
     {
@@ -38,18 +83,6 @@ void AProjectInfernoBoss::BeginPlay()
         if (m_boss_health_widget != nullptr)
         {
             m_boss_health_widget->AddToViewport();
-        }
-    }
-
-    if (auto weapon = GetWeapon())
-    {
-        auto controller = GetController<APIBossController>();
-
-        weapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, "WeaponSocket");
-
-        if (controller)
-        {
-            weapon->GetCollider()->OnComponentBeginOverlap.AddDynamic(controller, &APIBossController::OnWeaponHit);
         }
     }
 }
@@ -90,11 +123,30 @@ void AProjectInfernoBoss::RecoverHealth(float healing)
 // On boss death
 void AProjectInfernoBoss::OnDeath()
 {
-    GetController<APIBossController>()->OnBossDeath();
+    if (m_part1)
+    {
+        GetController<APIBossController>()->OnBossDeath();
+    }
+    else
+    {
+        GetController<APIExecutionerPart2Controller>()->OnBossDeath();
+    }
 
     if (m_boss_health_widget != nullptr)
     {
         m_boss_health_widget->RemoveFromViewport();
         m_boss_health_widget = nullptr;
+    }
+}
+
+void AProjectInfernoBoss::OnDamage()
+{
+    if (m_part1)
+    {
+        GetController<APIBossController>()->SetCurrentPhase();
+    }
+    else
+    {
+        GetController<APIExecutionerPart2Controller>()->SetCurrentPhase();
     }
 }

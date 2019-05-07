@@ -1,11 +1,10 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "PIHealthComponent.h"
-#include "math.h"
-#include "Engine.h"
 #include "DrawDebugHelpers.h"
-#include "PISaveGame.h"
 #include "Engine.h"
+#include "PISaveGame.h"
+#include "math.h"
 
 // Sets default values for this component's properties
 UPIHealthComponent::UPIHealthComponent()
@@ -37,7 +36,7 @@ void UPIHealthComponent::TakeDamage(AActor* damaged_actor,
 
     m_current_health -= damage;
 
-    OnDamaged.ExecuteIfBound({damaged_actor, damage, damage_type, instigated_by, damage_causer});
+    OnDamage.ExecuteIfBound({damaged_actor, damage, damage_type, instigated_by, damage_causer});
 
     if (m_current_health <= 0.0f)
     {
@@ -120,10 +119,8 @@ void UPIHealthComponent::RegenerateHealth()
     // FMath::Clamp(Healing = Healing * DeltaTime, 0.0f, 30.0f);
     m_current_health += Healing;
 
-
-
     GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Magenta, FString::Printf(TEXT("Plus 20 Health!!")));
-    
+
     UE_LOG(LogTemp, Warning, TEXT("Plus 20 Health!!"));
     // GEngine->AddOnScreenDebugMessage(
     // -1, 5.f, FColor::Magenta, FString::Printf(TEXT(" Health gen = %s"), healing));

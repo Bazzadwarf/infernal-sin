@@ -22,7 +22,29 @@ void APIWaveEnemySpawner::SpawnEnemy(TSubclassOf<AProjectInfernoPatrolEnemy> Ene
             // CHANGE TO NEW AI CLASS
             world->SpawnActor<AProjectInfernoPatrolEnemy>(EnemyType, position, rotation, spawn_params);
 
-            UE_LOG(LogTemp, Warning, TEXT("%s"), *GetNameSafe(this));
+            if (m_on_spawn_particle_effect != nullptr)
+            {
+                UGameplayStatics::SpawnEmitterAtLocation(this,
+                                                         m_on_spawn_particle_effect,
+                                                         this->ActorToWorld().GetLocation() + FVector(0.0f, 10.0f, 0.0f),
+                                                         FRotator(90.0f, 0.0f, 0.0f),
+                                                         true);
+            }
+
+            if (m_on_spawn_sound != nullptr)
+            {
+                UGameplayStatics::SpawnSoundAtLocation(this,
+                                                       m_on_spawn_sound,
+                                                       this->ActorToWorld().GetLocation(),
+                                                       FRotator::ZeroRotator,
+                                                       1.0f,
+                                                       1.0f,
+                                                       0.0f,
+                                                       nullptr,
+                                                       nullptr,
+                                                       true);
+            }
+
         }
     }
 }

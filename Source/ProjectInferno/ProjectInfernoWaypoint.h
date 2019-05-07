@@ -43,6 +43,9 @@ public:
                      bool from_sweep,
                      const FHitResult& sweep_result);
 
+    UFUNCTION()
+    FVector GetLocation();
+
 protected:
     // Called when the game starts or when spawned
     virtual void BeginPlay() override;

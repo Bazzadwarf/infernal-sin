@@ -81,7 +81,7 @@ void APIPlayerController::Possess(APawn* pawn)
         if (auto health_component
             = Cast<UPIHealthComponent>(pawn->GetComponentByClass(UPIHealthComponent::StaticClass())))
         {
-            health_component->OnDamaged.BindUFunction(this, "OnPlayerDamaged");
+            health_component->OnDamage.BindUFunction(this, "OnPlayerDamaged");
         }
     }
 }

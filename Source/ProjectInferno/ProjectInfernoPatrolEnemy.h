@@ -3,6 +3,7 @@
 #pragma once
 
 #include "PICharacter.h"
+#include "ProjectInfernoWaypoint.h"
 #include "ProjectInfernoPatrolEnemy.generated.h"
 
 UCLASS()
@@ -30,4 +31,7 @@ public:
 
     UFUNCTION()
     void OnDeath();
+
+protected:
+    virtual void BeginPlay() override;
 };
