@@ -46,7 +46,11 @@ enum class BossStates : uint8
     TakingOff,
     FlyingProjectile1,
     FlyingProjectile2,
-    FlyingProjectile3
+    FlyingProjectile3,
+    DashBack,
+    DashBehind,
+    DashSide,
+    LeapBack
 };
 
 UENUM(BlueprintType)

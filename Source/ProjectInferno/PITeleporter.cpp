@@ -35,8 +35,7 @@ void APITeleporter::SpawnLightAdd()
     if (m_light_add)
     {
         SetIsSpawning(true);
-        GetWorld()->SpawnActor<AProjectInfernoPatrolEnemy>(
-            m_light_add, this->GetActorLocation(), GetPlayerDirection(), spawn_params);
+        GetWorld()->SpawnActor<AProjectInfernoPatrolEnemy>(m_light_add, this->GetActorLocation(), GetPlayerDirection(), spawn_params);
     }
 }
 
@@ -48,8 +47,7 @@ void APITeleporter::SpawnRangedAdd()
     if (m_ranged_add)
     {
         SetIsSpawning(true);
-        GetWorld()->SpawnActor<APIRangedEnemy>(
-            m_ranged_add, this->GetActorLocation(), GetPlayerDirection(), spawn_params);
+        GetWorld()->SpawnActor<APIRangedEnemy>(m_ranged_add, this->GetActorLocation(), GetPlayerDirection(), spawn_params);
     }
 }
 

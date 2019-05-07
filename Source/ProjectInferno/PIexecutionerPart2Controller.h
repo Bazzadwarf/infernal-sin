@@ -52,6 +52,7 @@ private:
     TSubclassOf<class AProjectInfernoProjectile> m_bounce_projectile;
 
     int m_current_teleporter = 0;
+    int m_previous_teleporter = 0;
 
     TArray<UActorComponent*> m_actor_comp_array;
 
@@ -62,8 +63,13 @@ private:
     BossStates m_previous_state;
 
     PlayerSide m_player_side = PlayerSide::Front;
+    bool m_player_at_back = false;
 
     PlayerSide m_teleporter_side = PlayerSide::Front;
+
+    float m_add_count_check_timer = 0;
+
+    int m_add_counter = 0;
 
     int m_state_counter = 0;
 
@@ -76,8 +82,6 @@ private:
     float m_attack_delay = 0;
 
     float m_stay_close_timer = 0;
-
-    bool m_staying_close = false;
 
     float m_player_far_timer = 0;
 
