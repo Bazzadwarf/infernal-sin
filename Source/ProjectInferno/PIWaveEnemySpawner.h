@@ -10,6 +10,19 @@ UCLASS()
 class PROJECTINFERNO_API APIWaveEnemySpawner : public AActor
 {
     GENERATED_BODY()
+
+    UPROPERTY(EditAnywhere,
+              BlueprintReadWrite,
+              Category = "Particle Systems",
+              Meta = (AllowPrivateAccess = "true", DisplayName = "On Destory"))
+    class UParticleSystem* m_on_spawn_particle_effect;
+
+    UPROPERTY(EditAnywhere,
+              BlueprintReadWrite,
+              Category = "Sounds",
+              Meta = (AllowPrivateAccess = "true", DisplayName = "On Destroy"))
+    class USoundBase* m_on_spawn_sound;
+
 public:
     // TODO CHANGE THIS TO NEW AI
     UFUNCTION(BlueprintCallable, Category = "Spawner")

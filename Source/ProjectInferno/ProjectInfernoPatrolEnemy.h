@@ -19,8 +19,6 @@ public:
     // Sets default values for this character's properties
     AProjectInfernoPatrolEnemy();
 
-    virtual void BeginPlay() override;
-
     virtual class AProjectInfernoWaypoint* GetNextWaypoint();
 
     virtual void SetNextWaypoint(AProjectInfernoWaypoint* next_waypoint);
@@ -33,4 +31,7 @@ public:
 
     UFUNCTION()
     void OnDeath();
+
+protected:
+    virtual void BeginPlay() override;
 };

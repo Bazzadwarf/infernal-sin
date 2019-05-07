@@ -2,6 +2,7 @@
 
 #include "ProjectInfernoPatrolEnemy.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "ProjectInfernoWaypoint.h"
 #include "PIWaveController.h"
 
 // Sets default values
