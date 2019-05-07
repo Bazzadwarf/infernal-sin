@@ -3,6 +3,7 @@
 #pragma once
 
 #include "PICharacter.h"
+#include "ProjectInfernoWaypoint.h"
 #include "ProjectInfernoPatrolEnemy.generated.h"
 
 UCLASS()
@@ -17,6 +18,8 @@ private:
 public:
     // Sets default values for this character's properties
     AProjectInfernoPatrolEnemy();
+
+    virtual void BeginPlay() override;
 
     virtual class AProjectInfernoWaypoint* GetNextWaypoint();
 

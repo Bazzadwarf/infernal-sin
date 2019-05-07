@@ -10,12 +10,12 @@ void APIExecutionerController::BeginPlay()
 {
     Super::BeginPlay();
 
-    GetBoss()->ShowHUD();
+    // GetBoss()->ShowHUD();
 
     m_current_phase = BossPhases::Phase_1;
 }
 
-//void APIExecutionerController::BeginPlay()
+// void APIExecutionerController::BeginPlay()
 //{
 //    Super::BeginPlay();
 //
@@ -27,6 +27,16 @@ void APIExecutionerController::Tick(float delta_time)
     Super::Tick(delta_time);
 
     randomPick = rand() % 6;
+
+    if (!m_player_detected)
+    {
+        if (GetPlayerDistance() <= 3000)
+        {
+            m_player_detected = true;
+            SetCurrentPhase();
+            GetBoss()->ShowHUD();
+        }
+    }
 
     switch (m_current_phase)
     {

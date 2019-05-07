@@ -23,6 +23,25 @@ AProjectInfernoPatrolEnemy::AProjectInfernoPatrolEnemy()
     GetHealthComponent()->OnDeath.BindUFunction(this, "OnDeath");
 }
 
+void AProjectInfernoPatrolEnemy::BeginPlay()
+{
+    
+    for (TActorIterator<AProjectInfernoWaypoint> waypoints(GetWorld()); waypoints; ++waypoints)
+    {
+        if (*waypoints != nullptr)
+        {
+            if (!m_next_waypoint)
+            {
+                m_next_waypoint = *waypoints;
+            }
+            else if (this->GetDistanceTo(*waypoints) < this->GetDistanceTo(m_next_waypoint))
+            {
+                m_next_waypoint = *waypoints;
+            }
+        }
+    }
+}
+
 AProjectInfernoWaypoint* AProjectInfernoPatrolEnemy::GetNextWaypoint()
 {
     return m_next_waypoint;

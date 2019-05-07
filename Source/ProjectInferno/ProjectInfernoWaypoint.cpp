@@ -70,3 +70,8 @@ void AProjectInfernoWaypoint::PawnEntered(UPrimitiveComponent* overlap_component
         }
     }
 }
+
+FVector AProjectInfernoWaypoint::GetLocation()
+{
+    return GetActorLocation();
+}
