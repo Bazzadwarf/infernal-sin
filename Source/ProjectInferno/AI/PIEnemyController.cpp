@@ -6,8 +6,10 @@
 #include "BehaviorTree/BlackboardComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "Navigation/CrowdFollowingComponent.h"
 
-APIEnemyController::APIEnemyController()
+APIEnemyController::APIEnemyController(const FObjectInitializer& object_initializer)
+    : Super(object_initializer.SetDefaultSubobjectClass<UCrowdFollowingComponent>(TEXT("PathFollowingComponent")))
 {
     m_blackboard = CreateDefaultSubobject<UBlackboardComponent>(TEXT("Blackboard"));
     m_behaviour_tree = CreateDefaultSubobject<UBehaviorTreeComponent>(TEXT("Behaviour Tree"));
@@ -69,11 +71,13 @@ void APIEnemyController::OnPerceptionUpdated(const TArray<AActor*>& actors)
             if (stimulus.IsActive())
             {
                 m_player_reference = Cast<AProjectInfernoPlayerCharacter>(actor);
+                SetFocus(m_player_reference, EAIFocusPriority::Gameplay);
             }
             else
             {
                 m_player_reference = nullptr;
                 ReleaseAttackToken();
+                SetFocus(nullptr, EAIFocusPriority::Gameplay);
             }
         }
     }

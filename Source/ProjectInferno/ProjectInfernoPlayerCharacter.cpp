@@ -7,6 +7,7 @@
 #include "PIPlayerController.h"
 #include "ProjectInfernoProjectile.h"
 #include "UserWidget.h"
+#include "Navigation/CrowdManager.h"
 #include <algorithm>
 
 AProjectInfernoPlayerCharacter::AProjectInfernoPlayerCharacter()
@@ -74,6 +75,11 @@ void AProjectInfernoPlayerCharacter::BeginPlay()
 
         weapon->GetCollider()->OnComponentBeginOverlap.AddDynamic(GetController<APIPlayerController>(),
                                                                   &APIPlayerController::OnWeaponHit);
+    }
+
+    if (auto crowd_manager = UCrowdManager::GetCurrent(this))
+    {
+        crowd_manager->RegisterAgent(this);
     }
 }
 

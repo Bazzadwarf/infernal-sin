@@ -23,6 +23,8 @@ APIEnemy::APIEnemy()
 
     m_perception_component->SetDominantSense(*m_sight_config->GetSenseImplementation());
     m_perception_component->ConfigureSense(*m_sight_config);
+
+    GetHealthComponent()->SetMaxHealth(100.0f, true);
 }
 
 void APIEnemy::BeginPlay()

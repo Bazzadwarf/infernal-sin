@@ -59,7 +59,7 @@ private:
     bool m_is_stunned = false;
 
 public:
-    APIEnemyController();
+    APIEnemyController(const FObjectInitializer& object_initializer);
 
     virtual void Possess(APawn* pawn) override;
 

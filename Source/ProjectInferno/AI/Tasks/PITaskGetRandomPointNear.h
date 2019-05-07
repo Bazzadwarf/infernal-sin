@@ -14,7 +14,7 @@ class PROJECTINFERNO_API UPITaskGetRandomPointNear : public UBTTaskNode
 {
     GENERATED_BODY()
 private:
-    UPROPERTY(EditAnywhere, Category = "Blackboard", Meta = (AllowPrivateAccess = "true", DisplayName = "Player Key"))
+    UPROPERTY(EditAnywhere, Category = "Blackboard", Meta = (AllowPrivateAccess = "true", DisplayName = "Near Actor Key"))
     FBlackboardKeySelector m_player_key;
 
     UPROPERTY(EditAnywhere,
@@ -22,11 +22,11 @@ private:
               Meta = (AllowPrivateAccess = "true", DisplayName = "Point Vector Key"))
     FBlackboardKeySelector m_point_vector_key;
 
-    UPROPERTY(EditAnywhere, Category = "Options", Meta = (AllowPrivateAccess = "true", DisplayName = "Minimum Distance From Player"))
-    float m_min_distance = 180.0f;
+    UPROPERTY(EditAnywhere, Category = "Options", Meta = (AllowPrivateAccess = "true", DisplayName = "Minimum Distance From"))
+    float m_min_distance = 400.0f;
 
-    UPROPERTY(EditAnywhere, Category = "Options", Meta = (AllowPrivateAccess = "true", DisplayName = "Maximum Distance From Player"))
-    float m_max_distance = 220.0f;
+    UPROPERTY(EditAnywhere, Category = "Options", Meta = (AllowPrivateAccess = "true", DisplayName = "Maximum Distance From"))
+    float m_max_distance = 500.0f;
 
 public:
     virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& owner, uint8* memory) override;
