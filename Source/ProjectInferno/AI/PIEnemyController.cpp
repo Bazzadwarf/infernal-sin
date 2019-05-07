@@ -7,6 +7,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Navigation/CrowdFollowingComponent.h"
+#include "PIEnemyMelee.h"
 
 APIEnemyController::APIEnemyController(const FObjectInitializer& object_initializer)
     : Super(object_initializer.SetDefaultSubobjectClass<UCrowdFollowingComponent>(TEXT("PathFollowingComponent")))
@@ -39,6 +40,12 @@ void APIEnemyController::Possess(APawn* pawn)
 
     enemy->GetHealthComponent()->OnDamaged.BindUFunction(this, "OnDamaged");
     enemy->GetHealthComponent()->OnDeath.BindUFunction(this, "OnDeath");
+
+    if (auto melee_enemy = Cast<APIEnemyMelee>(enemy))
+    {
+        melee_enemy->GetLeftHandCollider()->OnComponentBeginOverlap.AddDynamic(this, &APIEnemyController::OnMeleeHit);
+        melee_enemy->GetRightHandCollider()->OnComponentBeginOverlap.AddDynamic(this, &APIEnemyController::OnMeleeHit);
+    }
 }
 
 void APIEnemyController::Tick(float delta_time)
@@ -86,12 +93,12 @@ void APIEnemyController::OnPerceptionUpdated(const TArray<AActor*>& actors)
 void APIEnemyController::StartAttack()
 {
     m_is_attacking = true;
+    m_hit_actors.Empty();
 }
 
 void APIEnemyController::StopAttack()
 {
     m_is_attacking = false;
-
     ReleaseAttackToken();
 }
 
@@ -153,9 +160,12 @@ bool APIEnemyController::IsRunning()
 void APIEnemyController::StartStun()
 {
     m_is_stunned = true;
-    // TODO: Play stun anim montage
-
     ReleaseAttackToken();
+
+    if (auto melee_enemy = Cast<APIEnemyMelee>(GetEnemy()))
+    {
+        melee_enemy->DisableHandColliders();
+    }
 }
 
 void APIEnemyController::EndStun()
@@ -170,15 +180,69 @@ bool APIEnemyController::IsStunned()
 
 void APIEnemyController::OnDamaged(FPIDamageInfo info)
 {
-    // TODO: Play knockback animation and give up attack token if we have one
+    if (GetEnemy()->GetHealthComponent()->GetCurrentHealth() > 0)
+    {
+        StartStun();
+        GetEnemy()->PlayAnimMontage(m_knockback_animation);
+    }
 }
 
 void APIEnemyController::OnDeath(FPIDamageInfo info)
 {
+    if (auto melee_enemy = Cast<APIEnemyMelee>(GetEnemy()))
+    {
+        melee_enemy->GetLeftHandCollider()->OnComponentBeginOverlap.RemoveDynamic(this,
+                                                                                  &APIEnemyController::OnMeleeHit);
+        melee_enemy->GetRightHandCollider()->OnComponentBeginOverlap.RemoveDynamic(this,
+                                                                                   &APIEnemyController::OnMeleeHit);
+    }
+
     ReleaseAttackToken();
+
+    // Do ragdoll
+    auto enemy = GetEnemy();
+
+    enemy->DetachFromControllerPendingDestroy();
+    enemy->GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+    enemy->GetCapsuleComponent()->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+
+    enemy->GetMesh()->SetCollisionProfileName("Ragdoll");
+    enemy->SetActorEnableCollision(true);
+
+    enemy->GetMesh()->SetAllBodiesSimulatePhysics(true);
+    enemy->GetMesh()->SetSimulatePhysics(true);
+    enemy->GetMesh()->WakeAllRigidBodies();
+    enemy->GetMesh()->bBlendPhysics = true;
+
+    if (auto character_comp = enemy->GetCharacterMovement())
+    {
+        character_comp->StopMovementImmediately();
+        character_comp->DisableMovement();
+        character_comp->SetComponentTickEnabled(false);
+    }
+
+    enemy->SetLifeSpan(10.0f);
 }
 
 const TArray<UAnimMontage*>& APIEnemyController::GetAttackAnimationsArray()
 {
     return m_attack_animations;
+}
+
+void APIEnemyController::OnMeleeHit(UPrimitiveComponent* hit_component,
+                                    AActor* other_actor,
+                                    UPrimitiveComponent* other_component,
+                                    int32 other_body_index,
+                                    bool b_from_sweep,
+                                    const FHitResult& sweep_result)
+{
+    if (!other_actor->GetClass()->IsChildOf(AProjectInfernoPlayerCharacter::StaticClass())
+        || m_hit_actors.Contains(other_actor))
+    {
+        return;
+    }
+
+    m_hit_actors.Add(other_actor);
+
+    other_actor->TakeDamage(Cast<APIEnemyMelee>(GetEnemy())->GetAttackDamage(), FPointDamageEvent{}, this, GetEnemy());
 }

@@ -52,8 +52,10 @@ private:
               Meta = (AllowPrivateAccess = "true", DisplayName = "Attack Animations"))
     TArray<UAnimMontage*> m_attack_animations;
 
-    bool m_has_attack_token = false;
+    UPROPERTY()
+    TArray<AActor*> m_hit_actors;
 
+    bool m_has_attack_token = false;
     bool m_is_running = false;
     bool m_is_attacking = false;
     bool m_is_stunned = false;
@@ -115,4 +117,12 @@ public:
 
     UFUNCTION()
     const TArray<UAnimMontage*>& GetAttackAnimationsArray();
+
+    UFUNCTION()
+    void OnMeleeHit(UPrimitiveComponent* hit_component,
+                    AActor* other_actor,
+                    UPrimitiveComponent* other_component,
+                    int32 other_body_index,
+                    bool b_from_sweep,
+                    const FHitResult& sweep_result);
 };

@@ -24,7 +24,7 @@ APIEnemy::APIEnemy()
     m_perception_component->SetDominantSense(*m_sight_config->GetSenseImplementation());
     m_perception_component->ConfigureSense(*m_sight_config);
 
-    GetHealthComponent()->SetMaxHealth(100.0f, true);
+    GetHealthComponent()->SetMaxHealth(100.0f);
 }
 
 void APIEnemy::BeginPlay()
@@ -47,4 +47,24 @@ UAIPerceptionComponent* APIEnemy::GetPerceptionComponent()
 UBehaviorTree* APIEnemy::GetBehaviourTree()
 {
     return m_behaviour_tree;
+}
+
+AActor* APIEnemy::GetHomePositionActor()
+{
+    return m_home_position_actor;
+}
+
+void APIEnemy::SetHomePositionActor(AActor* home_position_actor)
+{
+    m_home_position_actor = home_position_actor;
+}
+
+float APIEnemy::GetHealth()
+{
+    return GetHealthComponent()->GetCurrentHealth();
+}
+
+float APIEnemy::GetHealthPercent()
+{
+    return GetHealth() / GetHealthComponent()->GetMaxHealth();
 }

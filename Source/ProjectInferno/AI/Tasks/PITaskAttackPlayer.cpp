@@ -16,6 +16,11 @@ EBTNodeResult::Type UPITaskAttackPlayer::ExecuteTask(UBehaviorTreeComponent& own
 
     auto enemy_controller = Cast<APIEnemyController>(owner.GetAIOwner());
 
+    if (!enemy_controller || !enemy_controller->GetEnemy())
+    {
+        return EBTNodeResult::Failed;
+    }
+
     // Reset timer handle
     m_attack_timer_handle.Invalidate();
 
@@ -26,6 +31,8 @@ EBTNodeResult::Type UPITaskAttackPlayer::ExecuteTask(UBehaviorTreeComponent& own
     {
         return EBTNodeResult::Failed;
     }
+
+    enemy_controller->StartAttack();
 
     auto random_index = FMath::RandRange(0, all_attack_animations.Num() - 1);
     auto animation = all_attack_animations[random_index];
@@ -52,7 +59,10 @@ EBTNodeResult::Type UPITaskAttackPlayer::AbortTask(UBehaviorTreeComponent& owner
 
     if (m_current_attack_animation)
     {
-        enemy_controller->GetEnemy()->StopAnimMontage(m_current_attack_animation);
+        if (enemy_controller->GetEnemy())
+        {
+            enemy_controller->GetEnemy()->StopAnimMontage(m_current_attack_animation);
+        }
     }
 
     Cleanup(owner);

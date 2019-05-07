@@ -25,6 +25,9 @@ private:
     UPROPERTY(EditDefaultsOnly, Category = "AI", Meta = (AllowPrivateAccess = "true", DisplayName = "Behaviour Tree"))
     UBehaviorTree* m_behaviour_tree;
 
+    UPROPERTY(EditAnywhere, Category = "AI", Meta = (AllowPrivateAccess = "true", DisplayName = "Home Position Actor"))
+    AActor* m_home_position_actor = nullptr;
+
 public:
     APIEnemy();
 
@@ -36,4 +39,16 @@ public:
     UAIPerceptionComponent* GetPerceptionComponent();
 
     UBehaviorTree* GetBehaviourTree();
+
+    UFUNCTION()
+    AActor* GetHomePositionActor();
+
+    UFUNCTION()
+    void SetHomePositionActor(AActor* home_position_actor);
+
+    UFUNCTION(BlueprintCallable, Category = "Health")
+    float GetHealth();
+
+    UFUNCTION(BlueprintCallable, Category = "Health")
+    float GetHealthPercent();
 };
