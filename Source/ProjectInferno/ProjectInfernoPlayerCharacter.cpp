@@ -204,6 +204,23 @@ void AProjectInfernoPlayerCharacter::OnDeath()
     // This is now done in the splash screen
     // UGameplayStatics::OpenLevel(GetWorld(), "MainMenuLevel");
 
+    float random_sound = FMath::RandRange(0, m_death_sounds.Num() - 1);
+
+    if (m_death_sounds.Num() > 0)
+    {
+        //TODO: Isn't there meant to be a brief period of invincibility after each hit? There needs to be a check based on that so that this very nice lady doesn't scream like 100x a second
+        UGameplayStatics::SpawnSoundAtLocation(this,
+                                    m_death_sounds[random_sound],
+                                    this->GetActorLocation(),
+                                    FRotator::ZeroRotator,
+                                    1.0f,
+                                    1.0f,
+                                    0.0f,
+                                    nullptr,
+                                    nullptr,
+                                    true);
+    }
+
     if (m_death_screen_widget != nullptr)
     {
         m_death_screen_widget->AddToViewport();
