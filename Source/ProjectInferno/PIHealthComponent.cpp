@@ -36,7 +36,7 @@ void UPIHealthComponent::TakeDamage(AActor* damaged_actor,
 
     m_current_health -= damage;
 
-    OnDamage.ExecuteIfBound({damaged_actor, damage, damage_type, instigated_by, damage_causer});
+    OnDamaged.ExecuteIfBound({damaged_actor, damage, damage_type, instigated_by, damage_causer});
 
     if (m_current_health <= 0.0f)
     {
