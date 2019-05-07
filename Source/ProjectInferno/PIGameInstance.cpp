@@ -108,3 +108,9 @@ TArray<FPISaveFileInfo> UPIGameInstance::GetAllSaveFilesFromDisk()
 
     return files;
 }
+
+UPITokenManager* UPIGameInstance::GetAITokenManager()
+{
+    return IsValid(m_token_manager) ? m_token_manager
+                                    : (m_token_manager = NewObject<UPITokenManager>(this, TEXT("AI Token Manager")));
+}
