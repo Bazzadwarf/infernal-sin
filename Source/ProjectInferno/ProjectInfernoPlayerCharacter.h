@@ -5,12 +5,15 @@
 #include "Camera/CameraComponent.h"
 #include "Components/ChildActorComponent.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "Navigation/CrowdAgentInterface.h"
 #include "PICharacter.h"
 #include "Perception/AISightTargetInterface.h"
 #include "ProjectInfernoPlayerCharacter.generated.h"
 
 UCLASS()
-class PROJECTINFERNO_API AProjectInfernoPlayerCharacter : public APICharacter, public IAISightTargetInterface
+class PROJECTINFERNO_API AProjectInfernoPlayerCharacter : public APICharacter,
+                                                          public IAISightTargetInterface,
+                                                          public ICrowdAgentInterface
 {
     GENERATED_BODY()
 
@@ -35,6 +38,12 @@ private:
 
     UPROPERTY(EditDefaultsOnly, Category = "UI", Meta = (BlueprintProtected = "true", DisplayName = "Death Screen"))
     TSubclassOf<class UUserWidget> m_death_screen_class;
+
+    UPROPERTY(EditAnywhere,
+            BlueprintReadWrite,
+            Category = "Sounds",
+            Meta = (AllowPrivateAccess = "true", DisplayName = "Death Sounds"))
+    TArray<USoundBase*> m_death_sounds;
 
 public:
     AProjectInfernoPlayerCharacter();

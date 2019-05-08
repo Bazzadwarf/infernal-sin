@@ -4,6 +4,8 @@
 #include "Components/SkeletalMeshComponent.h"
 #include "Engine.h"
 #include "Kismet/GameplayStatics.h"
+#include "Navigation/CrowdManager.h"
+#include "PIGameInstance.h"
 #include "PIPlayerController.h"
 #include "ProjectInfernoProjectile.h"
 #include "UserWidget.h"
@@ -51,6 +53,16 @@ void AProjectInfernoPlayerCharacter::BeginPlay()
 {
     Super::BeginPlay();
 
+    if (auto game_instance = Cast<UPIGameInstance>(UGameplayStatics::GetGameInstance(GetWorld())))
+    {
+        if (auto save_game = game_instance->GetSaveGameObject())
+        {
+            m_current_projectile_count = save_game->player_ammo_count;
+            m_projectile_regen_progress = save_game->player_ammo_percentage;
+            GetHealthComponent()->LoadHealthDataFromSaveGame(save_game);
+        }
+    }
+
     m_current_stamina = MAX_STAMINA;
 
     // Create death screen widget
@@ -74,6 +86,11 @@ void AProjectInfernoPlayerCharacter::BeginPlay()
 
         weapon->GetCollider()->OnComponentBeginOverlap.AddDynamic(GetController<APIPlayerController>(),
                                                                   &APIPlayerController::OnWeaponHit);
+    }
+
+    if (auto crowd_manager = UCrowdManager::GetCurrent(this))
+    {
+        crowd_manager->RegisterAgent(this);
     }
 }
 
@@ -204,16 +221,35 @@ void AProjectInfernoPlayerCharacter::OnDeath()
     // This is now done in the splash screen
     // UGameplayStatics::OpenLevel(GetWorld(), "MainMenuLevel");
 
+    float random_sound = FMath::RandRange(0, m_death_sounds.Num() - 1);
+
+    if (m_death_sounds.Num() > 0)
+    {
+        //TODO: Isn't there meant to be a brief period of invincibility after each hit? There needs to be a check based on that so that this very nice lady doesn't scream like 100x a second
+        UGameplayStatics::SpawnSoundAtLocation(this,
+                                    m_death_sounds[random_sound],
+                                    this->GetActorLocation(),
+                                    FRotator::ZeroRotator,
+                                    1.0f,
+                                    1.0f,
+                                    0.0f,
+                                    nullptr,
+                                    nullptr,
+                                    true);
+    }
+
     if (m_death_screen_widget != nullptr)
     {
         m_death_screen_widget->AddToViewport();
     }
 
-    // auto world = GetWorld();
-    // auto controller = this->GetController();
-    // GetWeapon()->Destroy();
-    // this->Destroy();
-    // world->GetAuthGameMode()->RestartPlayer(controller);
+    if (auto game_instance = Cast<UPIGameInstance>(UGameplayStatics::GetGameInstance(GetWorld())))
+    {
+        if (auto save_game = game_instance->GetSaveGameObject())
+        {
+            game_instance->SaveGame(true);
+        }
+    }
 }
 
 bool AProjectInfernoPlayerCharacter::CanBeSeenFrom(const FVector& observer_location,

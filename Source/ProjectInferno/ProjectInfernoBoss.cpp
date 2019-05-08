@@ -24,7 +24,7 @@ AProjectInfernoBoss::AProjectInfernoBoss()
 
     GetHealthComponent()->SetMaxHealth(1000);
     GetHealthComponent()->OnDeath.BindUFunction(this, "OnDeath");
-    GetHealthComponent()->OnDamage.BindUFunction(this, "OnDamage");
+    GetHealthComponent()->OnDamaged.BindUFunction(this, "OnDamaged");
 }
 
 // Called when the game starts or when spawned
@@ -139,7 +139,7 @@ void AProjectInfernoBoss::OnDeath()
     }
 }
 
-void AProjectInfernoBoss::OnDamage()
+void AProjectInfernoBoss::OnDamaged()
 {
     if (m_part1)
     {

@@ -7,7 +7,7 @@
 #include "Engine/TriggerBox.h"
 #include "PIGameInstance.h"
 #include "PIWaveEnemySpawner.h"
-#include "ProjectInfernoPatrolEnemy.h"
+#include "AI/PIEnemy.h"
 #include "PIWaveController.generated.h"
 
 // Contains the info for each enemy type in a wave
@@ -17,7 +17,7 @@ struct FPIEnemyStruct
     GENERATED_BODY()
 
     UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Enemy Info")
-    TSubclassOf<AProjectInfernoPatrolEnemy> enemy_type;
+    TSubclassOf<APIEnemy> enemy_type;
 
     UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Enemy Info")
     int num_to_spawn;

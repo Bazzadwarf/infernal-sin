@@ -148,7 +148,7 @@ private:
     UPROPERTY(EditAnywhere,
               BlueprintReadWrite,
               Category = "Particle Systems",
-              Meta = (AllowPrivateAccess = "true", DisplayName = "On Destory"))
+              Meta = (AllowPrivateAccess = "true", DisplayName = "On Destroy"))
     class UParticleSystem* m_on_destory_particle_effect;
 
     UPROPERTY(EditAnywhere,
@@ -156,6 +156,12 @@ private:
               Category = "Sounds",
               Meta = (AllowPrivateAccess = "true", DisplayName = "On Destroy"))
     class USoundBase* m_on_destroy_sound;
+
+    UPROPERTY(EditAnywhere,
+              BlueprintReadWrite,
+              Category = "Sounds",
+              Meta = (AllowPrivateAccess = "true", DisplayName = "Attenuation"))
+    class USoundAttenuation* m_attenuation;
 
 public:
     // Sets default values for this actor's properties

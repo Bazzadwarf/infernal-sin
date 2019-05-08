@@ -116,6 +116,18 @@ private:
 
     class UParticleSystemComponent* m_hit_particle_system_component;
 
+    UPROPERTY(EditAnywhere,
+              BlueprintReadWrite,
+              Category = "Sounds",
+              Meta = (AllowPrivateAccess = "true", DisplayName = "Hurt Sounds"))
+    TArray<USoundBase*> m_hurt_sounds;
+
+    UPROPERTY(EditAnywhere,
+        BlueprintReadWrite,
+        Category = "Sounds",
+        Meta = (AllowPrivateAccess = "true", DisplayName = "Sword Hit"))
+    USoundBase* m_sword_hit;
+
 public:
     virtual void PostInitializeComponents() override;
 

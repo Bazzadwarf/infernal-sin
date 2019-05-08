@@ -81,7 +81,7 @@ void APIPlayerController::Possess(APawn* pawn)
         if (auto health_component
             = Cast<UPIHealthComponent>(pawn->GetComponentByClass(UPIHealthComponent::StaticClass())))
         {
-            health_component->OnDamage.BindUFunction(this, "OnPlayerDamaged");
+            health_component->OnDamaged.BindUFunction(this, "OnPlayerDamaged");
         }
     }
 }
@@ -97,7 +97,7 @@ void APIPlayerController::Tick(float delta_time)
 
     auto player = GetPlayerCharacter();
 
-    if (!m_charmed)
+    if (!m_charmed && !IsPaused())
     {
         if (IsDodging())
         {
@@ -144,6 +144,20 @@ void APIPlayerController::OnWeaponHit(UPrimitiveComponent* hit_component,
         return;
     }
 
+    if (m_sword_hit != nullptr)
+    {
+        UGameplayStatics::SpawnSoundAtLocation(this,
+                                    m_sword_hit,
+                                    GetPlayerCharacter()->GetActorLocation(),
+                                    FRotator::ZeroRotator,
+                                    1.0f,
+                                    1.0f,
+                                    0.0f,
+                                    nullptr,
+                                    nullptr,
+                                    true);
+    }
+
     m_hit_actors.Add(other_actor);
 
     const auto& weapon_properties = weapon->GetWeaponProperties();
@@ -186,6 +200,23 @@ void APIPlayerController::OnPlayerDamaged(FPIDamageInfo info)
 
     if (player->GetHealth() > 0)
     {
+        float random_sound = FMath::RandRange(0, m_hurt_sounds.Num() - 1);
+
+        if (m_hurt_sounds.Num() > 0)
+        {
+            //TODO: Isn't there meant to be a brief period of invincibility after each hit? There needs to be a check based on that so that this very nice lady doesn't scream like 100x a second
+            UGameplayStatics::SpawnSoundAtLocation(this,
+                                        m_hurt_sounds[random_sound],
+                                        GetPlayerCharacter()->GetActorLocation(),
+                                        FRotator::ZeroRotator,
+                                        1.0f,
+                                        1.0f,
+                                        0.0f,
+                                        nullptr,
+                                        nullptr,
+                                        true);
+        }
+
         if (m_invulnerability_time_left > 0.0f)
         {
             player->GetHealthComponent()->RecoverHealth(info.damage);
@@ -229,7 +260,7 @@ void APIPlayerController::Pause()
             m_pause_menu_widget->AddToViewport();
             // This is done in the Pause_Menu blueprint
             // UWidgetBlueprintLibrary::SetInputMode_UIOnlyEx(this, m_pause_menu_widget, EMouseLockMode::LockAlways);
-            //this->bShowMouseCursor = true;
+            // this->bShowMouseCursor = true;
         }
     }
 }
@@ -241,8 +272,8 @@ void APIPlayerController::Resume()
         if (m_pause_menu_widget != nullptr)
         {
             // This is done in the Pause_Menu blueprint
-            //m_pause_menu_widget->RemoveFromParent();
-            //this->bShowMouseCursor = false;
+            // m_pause_menu_widget->RemoveFromParent();
+            // this->bShowMouseCursor = false;
             UWidgetBlueprintLibrary::SetInputMode_GameOnly(this);
         }
     }

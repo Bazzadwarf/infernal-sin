@@ -26,7 +26,7 @@ class PROJECTINFERNO_API APIWaveEnemySpawner : public AActor
 public:
     // TODO CHANGE THIS TO NEW AI
     UFUNCTION(BlueprintCallable, Category = "Spawner")
-    void SpawnEnemy(TSubclassOf<AProjectInfernoPatrolEnemy> EnemyType, APIWaveController* parent);
+    void SpawnEnemy(TSubclassOf<APIEnemy> enemy_type, APIWaveController* parent);
 
     UFUNCTION(BlueprintCallable, Category = "Spawner")
     void DestroySelf();
