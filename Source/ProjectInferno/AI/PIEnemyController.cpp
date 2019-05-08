@@ -182,6 +182,20 @@ void APIEnemyController::OnDamaged(FPIDamageInfo info)
 {
     if (GetEnemy()->GetHealthComponent()->GetCurrentHealth() > 0)
     {
+        if (GetEnemy()->m_damaged_sound != nullptr && GetEnemy()->m_attenuation != nullptr)
+        {
+            UGameplayStatics::SpawnSoundAtLocation(this,
+                                        GetEnemy()->m_damaged_sound,
+                                        GetEnemy()->GetActorLocation(),
+                                        FRotator::ZeroRotator,
+                                        1.0f,
+                                        1.0f,
+                                        0.0f,
+                                        GetEnemy()->m_attenuation,
+                                        nullptr,
+                                        true);
+        }
+
         StartStun();
         GetEnemy()->PlayAnimMontage(m_knockback_animation);
     }
@@ -189,6 +203,20 @@ void APIEnemyController::OnDamaged(FPIDamageInfo info)
 
 void APIEnemyController::OnDeath(FPIDamageInfo info)
 {
+    if (GetEnemy()->m_death_sound != nullptr && GetEnemy()->m_attenuation != nullptr)
+    {
+        UGameplayStatics::SpawnSoundAtLocation(this,
+                                    GetEnemy()->m_death_sound,
+                                    GetEnemy()->GetActorLocation(),
+                                    FRotator::ZeroRotator,
+                                    1.0f,
+                                    1.0f,
+                                    0.0f,
+                                    GetEnemy()->m_attenuation,
+                                    nullptr,
+                                    true);
+    }
+
     if (auto melee_enemy = Cast<APIEnemyMelee>(GetEnemy()))
     {
         melee_enemy->GetLeftHandCollider()->OnComponentBeginOverlap.RemoveDynamic(this,
@@ -256,6 +284,20 @@ void APIEnemyController::OnMeleeHit(UPrimitiveComponent* hit_component,
         || m_hit_actors.Contains(other_actor))
     {
         return;
+    }
+
+    if (GetEnemy()->m_melee_hit_sound != nullptr && GetEnemy()->m_attenuation != nullptr)
+    {
+        UGameplayStatics::SpawnSoundAtLocation(this,
+                                    GetEnemy()->m_melee_hit_sound,
+                                    GetEnemy()->GetActorLocation(),
+                                    FRotator::ZeroRotator,
+                                    1.0f,
+                                    1.0f,
+                                    0.0f,
+                                    GetEnemy()->m_attenuation,
+                                    nullptr,
+                                    true);
     }
 
     m_hit_actors.Add(other_actor);
