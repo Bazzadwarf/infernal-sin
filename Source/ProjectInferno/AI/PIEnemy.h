@@ -29,6 +29,31 @@ private:
     AActor* m_home_position_actor = nullptr;
 
 public:
+    UPROPERTY(EditAnywhere,
+              BlueprintReadWrite,
+              Category = "Sounds",
+              Meta = (AllowPrivateAccess = "true", DisplayName = "Damaged Sound"))
+    USoundBase* m_damaged_sound;
+
+    UPROPERTY(EditAnywhere,
+            BlueprintReadWrite,
+            Category = "Sounds",
+            Meta = (AllowPrivateAccess = "true", DisplayName = "Death Sound"))
+    USoundBase* m_death_sound;
+
+    UPROPERTY(EditAnywhere,
+            BlueprintReadWrite,
+            Category = "Sounds",
+            Meta = (AllowPrivateAccess = "true", DisplayName = "Melee Hit Sound"))
+    USoundBase* m_melee_hit_sound;
+
+    UPROPERTY(EditAnywhere,
+              BlueprintReadWrite,
+              Category = "Sounds",
+              Meta = (AllowPrivateAccess = "true", DisplayName = "Attenuation"))
+    class USoundAttenuation* m_attenuation;
+
+public:
     APIEnemy();
 
     virtual void BeginPlay() override;
