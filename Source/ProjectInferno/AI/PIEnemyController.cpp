@@ -200,9 +200,9 @@ void APIEnemyController::OnDeath(FPIDamageInfo info)
 
     ReleaseAttackToken();
 
-    if (Cast<APIWaveController>(GetOwner()))
+    if (Cast<APIWaveController>(GetEnemy()->GetOwner()))
     {
-        Cast<APIWaveController>(GetOwner())->EnemyDied();
+        Cast<APIWaveController>(GetEnemy()->GetOwner())->EnemyDied();
     }
 
     // Do ragdoll
