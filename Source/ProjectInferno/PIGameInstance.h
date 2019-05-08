@@ -54,7 +54,7 @@ public:
     UPISaveGame* LoadGameFromSlot(FString save_slot_name);
 
     UFUNCTION(BlueprintCallable)
-    bool SaveGame();
+    bool SaveGame(bool reset_defaults);
 
     UFUNCTION(BlueprintCallable)
     void UpdatePlayerStartActorForSaveGame(APlayerStart* actor);
