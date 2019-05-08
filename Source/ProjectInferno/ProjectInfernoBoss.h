@@ -52,7 +52,7 @@ public:
     virtual void OnDeath();
 
     UFUNCTION()
-    virtual void OnDamage();
+    virtual void OnDamaged();
 
 protected:
     virtual void BeginPlay() override;

@@ -1,7 +1,8 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "PIExecutionerPart2Controller.h"
-//#include "HierarchicalLODOutliner/Private/HierarchicalLODType.h"
+#include "AI/PIEnemyMelee.h"
+#include "AI/PIEnemyRanged.h"
 
 APIExecutionerPart2Controller::APIExecutionerPart2Controller()
 {
@@ -100,6 +101,14 @@ void APIExecutionerPart2Controller::Idle(float delta_time)
 void APIExecutionerPart2Controller::Phase1(float delta_time)
 {
     auto player_dist = GetPlayerDistance();
+    if (player_dist < 650)
+    {
+        m_stay_close_timer += delta_time;
+    }
+    else
+    {
+        m_stay_close_timer = 0;
+    }
     if (m_ranged)
     {
         switch (m_current_state)
@@ -107,6 +116,9 @@ void APIExecutionerPart2Controller::Phase1(float delta_time)
             case BossStates::AxeStompAttack:
                 m_player_far_timer = 0;
                 ConeProjectiles(delta_time);
+                break;
+            case BossStates::DashBack:
+                FrontalBarrage(delta_time);
                 break;
             default:
                 m_ranged = false;
@@ -116,6 +128,14 @@ void APIExecutionerPart2Controller::Phase1(float delta_time)
     }
     if (RotateTowardsPlayer())
     {
+        if (m_stay_close_timer >= 6)
+        {
+            m_stay_close_timer = 0;
+            StopFollowing();
+            m_current_state = BossStates::DashBack;
+            m_previous_state = BossStates::DashBack;
+            return;
+        }
         if (player_dist > 1200)
         {
             m_player_far_timer += delta_time;
@@ -151,25 +171,26 @@ void APIExecutionerPart2Controller::Phase1(float delta_time)
             }
         }
     }
-    else if (m_player_side == PlayerSide::Left && player_dist < 350 && m_previous_state != BossStates::SwipeRightToLeft
-             && m_previous_state != BossStates::SwipeLeftToRight)
+    else if (m_current_state == BossStates::Idle || m_current_state == BossStates::Following && !m_player_at_back)
     {
-        StopFollowing();
-        m_current_state = BossStates::SwipeRightToLeft;
-        m_previous_state = BossStates::SwipeRightToLeft;
-    }
-    else if (m_player_side == PlayerSide::Right && player_dist < 350 && m_previous_state != BossStates::SwipeLeftToRight
-             && m_previous_state != BossStates::SwipeRightToLeft)
-    {
-        StopFollowing();
-        m_current_state = BossStates::SwipeLeftToRight;
-        m_previous_state = BossStates::SwipeLeftToRight;
+        if (m_player_side == PlayerSide::Left && player_dist < 550 && m_previous_state != BossStates::LeftAttack)
+        {
+            StopFollowing();
+            m_current_state = BossStates::LeftAttack;
+            m_previous_state = BossStates::LeftAttack;
+        }
+        else if (m_player_side == PlayerSide::Right && player_dist < 550 && m_previous_state != BossStates::RightAttack)
+        {
+            StopFollowing();
+            m_current_state = BossStates::RightAttack;
+            m_previous_state = BossStates::RightAttack;
+        }
     }
 }
 
 void APIExecutionerPart2Controller::Phase2(float delta_time)
 {
-    if (m_ranged)
+    if (m_ranged && m_add_counter < 4)
     {
         int next_teleporter = FMath::RandRange(0, GetBoss()->m_teleporters.Num() - 1);
         switch (m_current_state)
@@ -177,12 +198,24 @@ void APIExecutionerPart2Controller::Phase2(float delta_time)
             case BossStates::AxeStompAttack:
                 if (GetBoss()->m_teleporters.Num() != 0)
                 {
-                    GetBoss()->m_teleporters[m_current_teleporter]->SpawnLightAdd();
+                    if (FMath::RandRange(0, 4) > 0)
+                    {
+                        GetBoss()->m_teleporters[m_current_teleporter]->SpawnLightAdd();
+                    }
+                    else
+                    {
+                        GetBoss()->m_teleporters[m_current_teleporter]->SpawnRangedAdd();
+                    }
                 }
-                while (next_teleporter == m_current_teleporter)
+                while (next_teleporter == m_current_teleporter || next_teleporter == m_previous_teleporter)
                 {
+                    if (GetBoss()->m_teleporters.Num() <= 2)
+                    {
+                        break;
+                    }
                     next_teleporter = FMath::RandRange(0, GetBoss()->m_teleporters.Num() - 1);
                 }
+                m_previous_teleporter = m_current_teleporter;
                 m_current_teleporter = next_teleporter;
                 m_ranged = false;
                 break;
@@ -192,22 +225,54 @@ void APIExecutionerPart2Controller::Phase2(float delta_time)
         }
         return;
     }
-    if (RotateTowardsTeleporter() && GetBoss()->m_teleporters.Num() != 0)
+    m_add_count_check_timer += delta_time;
+    if (m_add_count_check_timer >= 4)
     {
-        if (GetTeleporterDistance() > 700)
+        m_add_count_check_timer = 0;
+        m_add_counter = 0;
+        for (TActorIterator<APIEnemyMelee> enemy_melee_itr(GetWorld()); enemy_melee_itr; ++enemy_melee_itr)
         {
-            ApproachLocation(GetTeleporterLocation(), 100);
+            APIEnemyMelee* enemy_melee = *enemy_melee_itr;
+            m_add_counter++;
         }
-        else
+        for (TActorIterator<APIEnemyRanged> enemy_ranged_itr(GetWorld()); enemy_ranged_itr; ++enemy_ranged_itr)
         {
-            StopFollowing();
-            m_current_state = BossStates::AxeStompAttack;
+            APIEnemyRanged* enemy_ranged = *enemy_ranged_itr;
+            m_add_counter++;
         }
+    }
+    if (m_add_counter <= 4)
+    {
+        if (RotateTowardsTeleporter() && GetBoss()->m_teleporters.Num() != 0)
+        {
+            if (GetTeleporterDistance() > 700)
+            {
+                ApproachLocation(GetTeleporterLocation(), 100);
+            }
+            else
+            {
+                StopFollowing();
+                m_current_state = BossStates::AxeStompAttack;
+            }
+        }
+    }
+    else
+    {
+        Phase1(delta_time);
     }
 }
 
 void APIExecutionerPart2Controller::Phase3(float delta_time)
 {
+    auto player_dist = GetPlayerDistance();
+    if (player_dist < 650)
+    {
+        m_stay_close_timer += delta_time;
+    }
+    else
+    {
+        m_stay_close_timer = 0;
+    }
     if (m_ranged)
     {
         switch (m_current_state)
@@ -219,7 +284,22 @@ void APIExecutionerPart2Controller::Phase3(float delta_time)
                 SpiralProjectiles(delta_time);
                 break;
             case BossStates::AxeStompAttack:
-                RandAOEProjectiels(25, delta_time);
+                RandAOEProjectiles(25, delta_time);
+                break;
+            case BossStates::LeftAttack:
+                SwipeRightToLeft(delta_time);
+                break;
+            case BossStates::RightAttack:
+                SwipeLeftToRight(delta_time);
+                break;
+            case BossStates::LeapBack:
+                HomingProjectiles();
+                break;
+            case BossStates::DashBehind:
+                RandAOEProjectiles(20, delta_time);
+                break;
+            case BossStates::DashSide:
+                FrontalBarrage(delta_time);
                 break;
             default:
                 m_ranged = false;
@@ -229,7 +309,28 @@ void APIExecutionerPart2Controller::Phase3(float delta_time)
     }
     if (RotateTowardsPlayer())
     {
-        auto player_dist = GetPlayerDistance();
+        if (m_stay_close_timer >= 5)
+        {
+            m_stay_close_timer = 0;
+            StopFollowing();
+            auto choice = FMath::RandRange(0, 2);
+            if (choice == 0)
+            {
+                m_current_state = BossStates::DashBehind;
+                m_previous_state = BossStates::DashBehind;
+            }
+            else if (choice == 1)
+            {
+                m_current_state = BossStates::DashSide;
+                m_previous_state = BossStates::DashSide;
+            }
+            else
+            {
+                m_current_state = BossStates::LeapBack;
+                m_previous_state = BossStates::LeapBack;
+            }
+            return;
+        }
         if (player_dist <= 400)
         {
             StopFollowing();
@@ -252,6 +353,21 @@ void APIExecutionerPart2Controller::Phase3(float delta_time)
                  || (m_previous_state == BossStates::Melee3 || m_previous_state == BossStates::Melee4))
         {
             ApproachPlayer(200);
+        }
+    }
+    else if (m_current_state == BossStates::Idle || m_current_state == BossStates::Following && !m_player_at_back)
+    {
+        if (m_player_side == PlayerSide::Left && player_dist < 550 && m_previous_state != BossStates::LeftAttack)
+        {
+            StopFollowing();
+            m_current_state = BossStates::LeftAttack;
+            m_previous_state = BossStates::LeftAttack;
+        }
+        else if (m_player_side == PlayerSide::Right && player_dist < 550 && m_previous_state != BossStates::RightAttack)
+        {
+            StopFollowing();
+            m_current_state = BossStates::RightAttack;
+            m_previous_state = BossStates::RightAttack;
         }
     }
 }
@@ -423,8 +539,8 @@ void APIExecutionerPart2Controller::OnWeaponHit(UPrimitiveComponent* hit_compone
     {
         case BossStates::Melee1:
         case BossStates::Melee2:
-        case BossStates::SwipeLeftToRight:
-        case BossStates::SwipeRightToLeft:
+        case BossStates::RightAttack:
+        case BossStates::LeftAttack:
         case BossStates::AxeStompAttack:
             damage = weapon_properties.GetKeyValue(EPIWeaponDataKey::MeleeLightDamage).Get(0.0f);
             break;
@@ -484,53 +600,73 @@ void APIExecutionerPart2Controller::OnFallingHit(UPrimitiveComponent* hit_compon
 void APIExecutionerPart2Controller::SetPlayerSide()
 {
     auto player_dir = GetPlayerDirection();
+    auto boss_rot = GetControlRotation();
 
-    if (FMath::Abs(player_dir.Yaw - GetControlRotation().Yaw) > 10)
+    auto degrees = FMath::RadiansToDegrees(FMath::Acos(FVector::DotProduct(boss_rot.Vector(), player_dir.Vector())));
+
+    if (degrees > 70)
     {
-        if (player_dir.Yaw < 0 && GetControlRotation().Yaw < 0)
+        m_player_at_back = true;
+    }
+    else
+    {
+        m_player_at_back = false;
+    }
+
+    if (FMath::Abs(player_dir.Yaw - boss_rot.Yaw) > 10)
+    {
+        if (player_dir.Yaw < 0 && boss_rot.Yaw < 0)
         {
-            if (player_dir.Yaw < GetControlRotation().Yaw)
+            if (player_dir.Yaw < boss_rot.Yaw)
             {
                 m_player_side = PlayerSide::Left;
+                return;
             }
             else
             {
                 m_player_side = PlayerSide::Right;
+                return;
             }
         }
-        else if (player_dir.Yaw > 0 && GetControlRotation().Yaw > 0)
+        else if (player_dir.Yaw > 0 && boss_rot.Yaw > 0)
         {
-            if (player_dir.Yaw < GetControlRotation().Yaw)
+            if (player_dir.Yaw < boss_rot.Yaw)
             {
                 m_player_side = PlayerSide::Left;
+                return;
             }
             else
             {
                 m_player_side = PlayerSide::Right;
+                return;
             }
         }
         else
         {
-            if (player_dir.Yaw > 0 && GetControlRotation().Yaw < 0)
+            if (player_dir.Yaw > 0 && boss_rot.Yaw < 0)
             {
-                if ((player_dir.Yaw + FMath::Abs(GetControlRotation().Yaw)) < 180)
+                if ((player_dir.Yaw + FMath::Abs(boss_rot.Yaw)) < 180)
                 {
                     m_player_side = PlayerSide::Right;
+                    return;
                 }
                 else
                 {
                     m_player_side = PlayerSide::Left;
+                    return;
                 }
             }
             else
             {
-                if ((GetControlRotation().Yaw + FMath::Abs(player_dir.Yaw)) < 180)
+                if ((boss_rot.Yaw + FMath::Abs(player_dir.Yaw)) < 180)
                 {
                     m_player_side = PlayerSide::Left;
+                    return;
                 }
                 else
                 {
                     m_player_side = PlayerSide::Right;
+                    return;
                 }
             }
         }
@@ -538,6 +674,7 @@ void APIExecutionerPart2Controller::SetPlayerSide()
     else
     {
         m_player_side = PlayerSide::Front;
+        return;
     }
 }
 
@@ -577,10 +714,12 @@ void APIExecutionerPart2Controller::SetTeleporterSide()
             if (teleporter_dir.Yaw < GetControlRotation().Yaw)
             {
                 m_teleporter_side = PlayerSide::Left;
+                return;
             }
             else
             {
                 m_teleporter_side = PlayerSide::Right;
+                return;
             }
         }
         else if (teleporter_dir.Yaw > 0 && GetControlRotation().Yaw > 0)
@@ -588,10 +727,12 @@ void APIExecutionerPart2Controller::SetTeleporterSide()
             if (teleporter_dir.Yaw < GetControlRotation().Yaw)
             {
                 m_teleporter_side = PlayerSide::Left;
+                return;
             }
             else
             {
                 m_teleporter_side = PlayerSide::Right;
+                return;
             }
         }
         else
@@ -601,10 +742,12 @@ void APIExecutionerPart2Controller::SetTeleporterSide()
                 if ((teleporter_dir.Yaw + FMath::Abs(GetControlRotation().Yaw)) < 180)
                 {
                     m_teleporter_side = PlayerSide::Right;
+                    return;
                 }
                 else
                 {
                     m_teleporter_side = PlayerSide::Left;
+                    return;
                 }
             }
             else
@@ -612,10 +755,12 @@ void APIExecutionerPart2Controller::SetTeleporterSide()
                 if ((GetControlRotation().Yaw + FMath::Abs(teleporter_dir.Yaw)) < 180)
                 {
                     m_teleporter_side = PlayerSide::Left;
+                    return;
                 }
                 else
                 {
                     m_teleporter_side = PlayerSide::Right;
+                    return;
                 }
             }
         }
@@ -623,6 +768,7 @@ void APIExecutionerPart2Controller::SetTeleporterSide()
     else
     {
         m_teleporter_side = PlayerSide::Front;
+        return;
     }
 }
 
@@ -684,8 +830,7 @@ void APIExecutionerPart2Controller::StopFlying()
 void APIExecutionerPart2Controller::SetRanged()
 {
     auto player_dist = GetPlayerDistance();
-    if (player_dist > 600 || m_staying_close
-        || (m_current_phase == BossPhases::Phase_2 && m_current_state == BossStates::AxeStompAttack))
+    if (player_dist > 600 || (m_current_phase == BossPhases::Phase_2 && m_current_state == BossStates::AxeStompAttack))
     {
         auto weapon_mesh = Cast<USkeletalMeshComponent>(GetBoss()->GetWeapon()->GetMesh());
         m_ranged_spawn_pos = weapon_mesh->GetSocketLocation("ProjectileSocket");
@@ -717,6 +862,7 @@ void APIExecutionerPart2Controller::HomingProjectiles()
     if (m_homing_projectile && GetWorld())
     {
         Fire(m_ranged_spawn_pos, GetControlRotation(), m_homing_projectile);
+        m_ranged = false;
     }
 }
 
@@ -728,6 +874,7 @@ void APIExecutionerPart2Controller::SpawnerProjectiles()
         rotation.Add(0, 90, 0);
 
         Fire(m_ranged_spawn_pos, rotation, m_spawner_projectile);
+        m_ranged = false;
     }
 }
 
@@ -765,7 +912,7 @@ void APIExecutionerPart2Controller::WaveAOEProjectiles(int projectiles, float de
     }
 }
 
-void APIExecutionerPart2Controller::RandAOEProjectiels(int projectiles, float delta_time)
+void APIExecutionerPart2Controller::RandAOEProjectiles(int projectiles, float delta_time)
 {
     if (m_slow_projectile && GetWorld())
     {
@@ -865,8 +1012,8 @@ void APIExecutionerPart2Controller::SwipeRightToLeft(float delta_time)
             auto weapon_mesh = Cast<USkeletalMeshComponent>(GetBoss()->GetWeapon()->GetMesh());
             m_ranged_spawn_pos = weapon_mesh->GetSocketLocation("ProjectileSocket");
 
-            auto rotation = GetPlayerDirection();
-            Fire(m_ranged_spawn_pos, {rotation.Pitch + 1, (rotation.Yaw + m_ranged_yaw), 0}, m_rapid_projectile);
+            auto rotation = (GetPlayerLocation() - m_ranged_spawn_pos).Rotation();
+            Fire(m_ranged_spawn_pos, {rotation.Pitch, (rotation.Yaw + m_ranged_yaw), 0}, m_rapid_projectile);
 
             m_ranged_yaw += 3.f;
 
@@ -896,9 +1043,9 @@ void APIExecutionerPart2Controller::ConeProjectiles(float delta_time)
             m_ranged_timer = 0;
             m_ranged_counter++;
 
-            auto rotation = GetPlayerDirection();
+            auto rotation = (GetPlayerLocation() - m_ranged_spawn_pos).Rotation();
 
-            Fire(m_ranged_spawn_pos, {rotation.Pitch + 5, (rotation.Yaw + m_ranged_yaw), 0}, m_rapid_projectile);
+            Fire(m_ranged_spawn_pos, {0, (rotation.Yaw + m_ranged_yaw), 0}, m_rapid_projectile);
             m_ranged_yaw -= 3.f;
 
             if (m_ranged_yaw == -3.f)
@@ -926,9 +1073,9 @@ void APIExecutionerPart2Controller::FrontalBarrage(float delta_time)
             m_ranged_timer = 0;
             m_ranged_counter++;
 
-            auto rotation = GetPlayerDirection();
+            auto rotation = (GetPlayerLocation() - m_ranged_spawn_pos).Rotation();
             Fire(m_ranged_spawn_pos,
-                 {rotation.Pitch + FMath::RandRange(-2.f, 6.f), (rotation.Yaw + FMath::RandRange(-8.f, 8.f)), 0},
+                 {FMath::RandRange(-4.f, 4.f), (rotation.Yaw + FMath::RandRange(-10.f, 10.f)), 0},
                  m_regular_projectile);
 
             if (m_ranged_counter == 60)
