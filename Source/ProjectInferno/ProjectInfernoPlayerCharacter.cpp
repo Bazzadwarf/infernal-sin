@@ -4,10 +4,11 @@
 #include "Components/SkeletalMeshComponent.h"
 #include "Engine.h"
 #include "Kismet/GameplayStatics.h"
+#include "Navigation/CrowdManager.h"
+#include "PIGameInstance.h"
 #include "PIPlayerController.h"
 #include "ProjectInfernoProjectile.h"
 #include "UserWidget.h"
-#include "Navigation/CrowdManager.h"
 #include <algorithm>
 
 AProjectInfernoPlayerCharacter::AProjectInfernoPlayerCharacter()
@@ -51,6 +52,16 @@ AProjectInfernoPlayerCharacter::AProjectInfernoPlayerCharacter()
 void AProjectInfernoPlayerCharacter::BeginPlay()
 {
     Super::BeginPlay();
+
+    if (auto game_instance = Cast<UPIGameInstance>(UGameplayStatics::GetGameInstance(GetWorld())))
+    {
+        if (auto save_game = game_instance->GetSaveGameObject())
+        {
+            m_current_projectile_count = save_game->player_ammo_count;
+            m_projectile_regen_progress = save_game->player_ammo_percentage;
+            GetHealthComponent()->LoadHealthDataFromSaveGame(save_game);
+        }
+    }
 
     m_current_stamina = MAX_STAMINA;
 
@@ -232,11 +243,13 @@ void AProjectInfernoPlayerCharacter::OnDeath()
         m_death_screen_widget->AddToViewport();
     }
 
-    // auto world = GetWorld();
-    // auto controller = this->GetController();
-    // GetWeapon()->Destroy();
-    // this->Destroy();
-    // world->GetAuthGameMode()->RestartPlayer(controller);
+    if (auto game_instance = Cast<UPIGameInstance>(UGameplayStatics::GetGameInstance(GetWorld())))
+    {
+        if (auto save_game = game_instance->GetSaveGameObject())
+        {
+            game_instance->SaveGame(true);
+        }
+    }
 }
 
 bool AProjectInfernoPlayerCharacter::CanBeSeenFrom(const FVector& observer_location,

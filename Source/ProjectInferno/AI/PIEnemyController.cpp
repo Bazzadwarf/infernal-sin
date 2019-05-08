@@ -7,6 +7,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Navigation/CrowdFollowingComponent.h"
+#include "../PIWaveController.h"
 #include "PIEnemyMelee.h"
 
 APIEnemyController::APIEnemyController(const FObjectInitializer& object_initializer)
@@ -226,6 +227,11 @@ void APIEnemyController::OnDeath(FPIDamageInfo info)
     }
 
     ReleaseAttackToken();
+
+    if (Cast<APIWaveController>(GetEnemy()->GetOwner()))
+    {
+        Cast<APIWaveController>(GetEnemy()->GetOwner())->EnemyDied();
+    }
 
     // Do ragdoll
     auto enemy = GetEnemy();
