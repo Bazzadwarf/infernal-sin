@@ -81,11 +81,11 @@ void AProjectInfernoProjectile::Tick(float delta_time)
             m_world_location += this->GetActorForwardVector() * sine * m_sine_magnitude;
         }
     }
-	else if(m_cos_wave)
-	{
-		cos = FMath::Cos(m_life_time / m_cos_wave_length);
-		
-		if (m_cos_horizontal)
+    else if (m_cos_wave)
+    {
+        cos = FMath::Cos(m_life_time / m_cos_wave_length);
+
+        if (m_cos_horizontal)
         {
             m_world_location += this->GetActorRightVector() * cos * m_cos_magnitude;
         }
@@ -99,7 +99,7 @@ void AProjectInfernoProjectile::Tick(float delta_time)
         {
             m_world_location += this->GetActorForwardVector() * cos * m_cos_magnitude;
         }
-	}	
+    }
 
     this->SetActorLocation(m_world_location);
 }
@@ -133,7 +133,7 @@ void AProjectInfernoProjectile::OnHit(UPrimitiveComponent* hit_component,
                                                    1.0f,
                                                    1.0f,
                                                    0.0f,
-                                                   nullptr,
+                                                   m_attenuation,
                                                    nullptr,
                                                    true);
         }

@@ -39,6 +39,12 @@ private:
     UPROPERTY(EditDefaultsOnly, Category = "UI", Meta = (BlueprintProtected = "true", DisplayName = "Death Screen"))
     TSubclassOf<class UUserWidget> m_death_screen_class;
 
+    UPROPERTY(EditAnywhere,
+            BlueprintReadWrite,
+            Category = "Sounds",
+            Meta = (AllowPrivateAccess = "true", DisplayName = "Death Sounds"))
+    TArray<USoundBase*> m_death_sounds;
+
 public:
     AProjectInfernoPlayerCharacter();
 
