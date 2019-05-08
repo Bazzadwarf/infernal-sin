@@ -28,7 +28,7 @@ UPISaveGame* UPIGameInstance::LoadGameFromSlot(FString save_slot_name)
     return nullptr;
 }
 
-bool UPIGameInstance::SaveGame()
+bool UPIGameInstance::SaveGame(bool reset_defaults)
 {
     if (m_save_game_object == nullptr)
     {
@@ -37,12 +37,19 @@ bool UPIGameInstance::SaveGame()
     }
 
     // Update Player Data
-    auto player = Cast<AProjectInfernoPlayerCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
+    if (reset_defaults)
+    {
+        m_save_game_object->ResetPlayerValuesToDefault();
+    }
+    else
+    {
+        auto player = Cast<AProjectInfernoPlayerCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
 
-    m_save_game_object->player_health = player->GetHealth();
-    m_save_game_object->player_ammo_count = player->GetCurrentProjectileCount();
-    m_save_game_object->player_ammo_percentage
-        = player->GetProjectileRegenProgress(m_save_game_object->player_ammo_count + 1);
+        m_save_game_object->player_health = player->GetHealth();
+        m_save_game_object->player_ammo_count = player->GetCurrentProjectileCount();
+        m_save_game_object->player_ammo_percentage
+            = player->GetProjectileRegenProgress(m_save_game_object->player_ammo_count + 1);
+    }
 
     // Update current level name
     m_save_game_object->level_name = GetWorld()->GetMapName();
@@ -57,7 +64,7 @@ void UPIGameInstance::UpdatePlayerStartActorForSaveGame(APlayerStart* actor)
     check(actor);
 
     m_save_game_object->checkpoint_actor_tag = actor->PlayerStartTag.ToString();
-    SaveGame();
+    SaveGame(false);
 }
 
 UPISaveGame* UPIGameInstance::GetSaveGameObject()

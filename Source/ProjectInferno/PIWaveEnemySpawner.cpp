@@ -3,11 +3,11 @@
 #include "PIWaveEnemySpawner.h"
 #include "Engine.h"
 #include "PIWaveController.h"
-#include "ProjectInfernoPatrolEnemy.h"
+#include "AI/PIEnemy.h"
 
-void APIWaveEnemySpawner::SpawnEnemy(TSubclassOf<AProjectInfernoPatrolEnemy> EnemyType, APIWaveController* parent)
+void APIWaveEnemySpawner::SpawnEnemy(TSubclassOf<APIEnemy> enemy_type, APIWaveController* parent)
 {
-    if (EnemyType)
+    if (enemy_type)
     {
         auto position = GetActorLocation();
         auto rotation = GetActorRotation();
@@ -20,7 +20,7 @@ void APIWaveEnemySpawner::SpawnEnemy(TSubclassOf<AProjectInfernoPatrolEnemy> Ene
             spawn_params.Instigator = Instigator;
 
             // CHANGE TO NEW AI CLASS
-            world->SpawnActor<AProjectInfernoPatrolEnemy>(EnemyType, position, rotation, spawn_params);
+            world->SpawnActor<APIEnemy>(enemy_type, position, rotation, spawn_params);
 
             if (m_on_spawn_particle_effect != nullptr)
             {
