@@ -196,7 +196,7 @@ public:
     void WaveAOEProjectiles(int projectiles, float delta_time);
 
     UFUNCTION(BlueprintCallable)
-    void RandAOEProjectiels(int projectiles, float delta_time);
+    void RandAOEProjectiles(int projectiles, float delta_time);
 
     UFUNCTION(BlueprintCallable)
     void SwipeLeftToRight(float delta_time);

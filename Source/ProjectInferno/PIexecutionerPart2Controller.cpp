@@ -1,7 +1,8 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "PIExecutionerPart2Controller.h"
-//#include "HierarchicalLODOutliner/Private/HierarchicalLODType.h"
+#include "AI/PIEnemyMelee.h"
+#include "AI/PIEnemyRanged.h"
 
 APIExecutionerPart2Controller::APIExecutionerPart2Controller()
 {
@@ -197,7 +198,14 @@ void APIExecutionerPart2Controller::Phase2(float delta_time)
             case BossStates::AxeStompAttack:
                 if (GetBoss()->m_teleporters.Num() != 0)
                 {
-                    GetBoss()->m_teleporters[m_current_teleporter]->SpawnLightAdd();
+                    if (FMath::RandRange(0, 4) > 0)
+                    {
+                        GetBoss()->m_teleporters[m_current_teleporter]->SpawnLightAdd();
+                    }
+                    else
+                    {
+                        GetBoss()->m_teleporters[m_current_teleporter]->SpawnRangedAdd();
+                    }
                 }
                 while (next_teleporter == m_current_teleporter || next_teleporter == m_previous_teleporter)
                 {
@@ -222,16 +230,18 @@ void APIExecutionerPart2Controller::Phase2(float delta_time)
     {
         m_add_count_check_timer = 0;
         m_add_counter = 0;
-        for (TActorIterator<AProjectInfernoPatrolEnemy> enemy_itr(GetWorld()); enemy_itr; ++enemy_itr)
+        for (TActorIterator<APIEnemyMelee> enemy_melee_itr(GetWorld()); enemy_melee_itr; ++enemy_melee_itr)
         {
-            AProjectInfernoPatrolEnemy* enemy = *enemy_itr;
-            if (enemy->ActorHasTag("Spawned"))
-            {
-                m_add_counter++;
-            }
+            APIEnemyMelee* enemy_melee = *enemy_melee_itr;
+            m_add_counter++;
+        }
+        for (TActorIterator<APIEnemyRanged> enemy_ranged_itr(GetWorld()); enemy_ranged_itr; ++enemy_ranged_itr)
+        {
+            APIEnemyRanged* enemy_ranged = *enemy_ranged_itr;
+            m_add_counter++;
         }
     }
-    if (m_add_counter <= 3)
+    if (m_add_counter <= 4)
     {
         if (RotateTowardsTeleporter() && GetBoss()->m_teleporters.Num() != 0)
         {
@@ -274,7 +284,7 @@ void APIExecutionerPart2Controller::Phase3(float delta_time)
                 SpiralProjectiles(delta_time);
                 break;
             case BossStates::AxeStompAttack:
-                RandAOEProjectiels(25, delta_time);
+                RandAOEProjectiles(25, delta_time);
                 break;
             case BossStates::LeftAttack:
                 SwipeRightToLeft(delta_time);
@@ -286,7 +296,7 @@ void APIExecutionerPart2Controller::Phase3(float delta_time)
                 HomingProjectiles();
                 break;
             case BossStates::DashBehind:
-                RandAOEProjectiels(20, delta_time);
+                RandAOEProjectiles(20, delta_time);
                 break;
             case BossStates::DashSide:
                 FrontalBarrage(delta_time);
@@ -593,8 +603,6 @@ void APIExecutionerPart2Controller::SetPlayerSide()
     auto boss_rot = GetControlRotation();
 
     auto degrees = FMath::RadiansToDegrees(FMath::Acos(FVector::DotProduct(boss_rot.Vector(), player_dir.Vector())));
-
-    UE_LOG(LogTemp, Warning, TEXT("Degrees: %f"), degrees);
 
     if (degrees > 70)
     {
@@ -904,7 +912,7 @@ void APIExecutionerPart2Controller::WaveAOEProjectiles(int projectiles, float de
     }
 }
 
-void APIExecutionerPart2Controller::RandAOEProjectiels(int projectiles, float delta_time)
+void APIExecutionerPart2Controller::RandAOEProjectiles(int projectiles, float delta_time)
 {
     if (m_slow_projectile && GetWorld())
     {
@@ -1066,7 +1074,9 @@ void APIExecutionerPart2Controller::FrontalBarrage(float delta_time)
             m_ranged_counter++;
 
             auto rotation = (GetPlayerLocation() - m_ranged_spawn_pos).Rotation();
-            Fire(m_ranged_spawn_pos, {FMath::RandRange(-4.f, 4.f), (rotation.Yaw + FMath::RandRange(-10.f, 10.f)), 0}, m_regular_projectile);
+            Fire(m_ranged_spawn_pos,
+                 {FMath::RandRange(-4.f, 4.f), (rotation.Yaw + FMath::RandRange(-10.f, 10.f)), 0},
+                 m_regular_projectile);
 
             if (m_ranged_counter == 60)
             {

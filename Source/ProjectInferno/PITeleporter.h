@@ -2,11 +2,11 @@
 
 #pragma once
 
+#include "AI/PIEnemyMelee.h"
+#include "AI/PIEnemyRanged.h"
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "Kismet/GameplayStatics.h"
-#include "PIRangedEnemy.h"
-#include "ProjectInfernoPatrolEnemy.h"
 #include "ProjectInfernoPlayerCharacter.h"
 #include "Runtime/Engine/Classes/Engine/World.h"
 #include "PITeleporter.generated.h"
@@ -21,10 +21,10 @@ private:
     TSubclassOf<class APIEnemySpawner> m_spawner;
 
     UPROPERTY(EditDefaultsOnly, Category = "Spawner", meta = (AllowPrivateAccess = "true", DisplayName = "Light Add"))
-    TSubclassOf<class AProjectInfernoPatrolEnemy> m_light_add;
+    TSubclassOf<class APIEnemyMelee> m_light_add;
 
     UPROPERTY(EditDefaultsOnly, Category = "Spawner", meta = (AllowPrivateAccess = "true", DisplayName = "Ranged Add"))
-    TSubclassOf<class APIRangedEnemy> m_ranged_add;
+    TSubclassOf<class APIEnemyRanged> m_ranged_add;
 
     UPROPERTY(EditAnywhere, Category = "Teleporter", meta = (AllowPrivateAccess = "true", DisplayName = "IsCenter"))
     bool m_is_center = false;
