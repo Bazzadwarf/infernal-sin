@@ -48,7 +48,7 @@ void APIEnemySpawner::SpawnEnemy()
         {
             FActorSpawnParameters spawn_params;
             spawn_params.Owner = this;
-            spawn_params.Instigator = Instigator;
+            spawn_params.Instigator = GetInstigator();
 
             world->SpawnActor<AProjectInfernoPatrolEnemy>(m_enemy, position, rotation, spawn_params);
         }

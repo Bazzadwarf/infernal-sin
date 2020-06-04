@@ -110,7 +110,7 @@ void AProjectInfernoPatrolEnemyControl::Fire()
         {
             FActorSpawnParameters spawn_params;
             spawn_params.Owner = this;
-            spawn_params.Instigator = Instigator;
+            spawn_params.Instigator = GetInstigator();
 
             auto projectile = world->SpawnActor<AProjectInfernoProjectile>(
                 m_projectile, enemy_position, enemy_rotation, spawn_params);

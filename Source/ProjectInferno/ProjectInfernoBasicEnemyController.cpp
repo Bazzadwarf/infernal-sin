@@ -12,9 +12,9 @@ AProjectInfernoBasicEnemyController::AProjectInfernoBasicEnemyController()
     m_blackboard_component = CreateDefaultSubobject<UBlackboardComponent>(TEXT("BlackboardComp"));
 }
 
-void AProjectInfernoBasicEnemyController::Possess(APawn* pawn)
+void AProjectInfernoBasicEnemyController::OnPossess(APawn* pawn)
 {
-    Super::Possess(pawn);
+    Super::OnPossess(pawn);
 
     // Check if possessed pawn is of type AProjectInfernoBasicEnemy
     if (auto ai_character = Cast<AProjectInfernoBasicEnemy>(pawn))

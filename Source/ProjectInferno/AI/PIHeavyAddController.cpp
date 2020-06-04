@@ -296,7 +296,7 @@ void APIHeavyAddController::Fire(FVector location,
 {
     FActorSpawnParameters spawn_params;
     spawn_params.Owner = this;
-    spawn_params.Instigator = this->Instigator;
+    spawn_params.Instigator = this->GetInstigator();
 
     auto projectile
         = GetWorld()->SpawnActor<AProjectInfernoProjectile>(projectile_type, location, rotation, spawn_params);

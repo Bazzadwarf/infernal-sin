@@ -116,7 +116,7 @@ void AProjectInfernoProjectile::OnHit(UPrimitiveComponent* hit_component,
                                       FVector normal_impulse,
                                       const FHitResult& hit)
 {
-    if (other_actor != this && other_actor && Instigator)
+    if (other_actor != this && other_actor && GetInstigator())
     {
         if (m_on_destory_particle_effect != nullptr)
         {
@@ -144,7 +144,7 @@ void AProjectInfernoProjectile::OnHit(UPrimitiveComponent* hit_component,
             {
                 if (other_actor->ActorHasTag("Player"))
                 {
-                    other_actor->TakeDamage(m_damage, FPointDamageEvent{}, Instigator->GetController(), this);
+                    other_actor->TakeDamage(m_damage, FPointDamageEvent{}, GetInstigator()->GetController(), this);
                     if (this->ActorHasTag("Charm"))
                     {
                         auto player = Cast<AProjectInfernoPlayerCharacter>(other_actor);
@@ -175,7 +175,7 @@ void AProjectInfernoProjectile::OnHit(UPrimitiveComponent* hit_component,
                 {
                     FActorSpawnParameters spawn_params;
                     spawn_params.Owner = this;
-                    spawn_params.Instigator = Instigator;
+                    spawn_params.Instigator = GetInstigator();
 
                     world->SpawnActor<APIEnemySpawner>(m_portal, position, rotation, spawn_params);
                 }
@@ -191,7 +191,7 @@ void AProjectInfernoProjectile::OnHit(UPrimitiveComponent* hit_component,
             }
             else if (other_actor->ActorHasTag("Enemy"))
             {
-                other_actor->TakeDamage(m_damage, FPointDamageEvent{}, Instigator->GetController(), this);
+                other_actor->TakeDamage(m_damage, FPointDamageEvent{}, GetInstigator()->GetController(), this);
             }
 
             this->Destroy();

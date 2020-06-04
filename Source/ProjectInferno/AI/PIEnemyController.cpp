@@ -17,9 +17,9 @@ APIEnemyController::APIEnemyController(const FObjectInitializer& object_initiali
     m_behaviour_tree = CreateDefaultSubobject<UBehaviorTreeComponent>(TEXT("Behaviour Tree"));
 }
 
-void APIEnemyController::Possess(APawn* pawn)
+void APIEnemyController::OnPossess(APawn* pawn)
 {
-    Super::Possess(pawn);
+    Super::OnPossess(pawn);
 
     auto enemy = Cast<APIEnemy>(pawn);
     check(enemy);

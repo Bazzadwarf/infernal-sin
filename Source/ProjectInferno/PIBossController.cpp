@@ -44,9 +44,9 @@ void APIBossController::Tick(float delta_time)
     UpdateControlRotation(delta_time);
 }
 
-void APIBossController::Possess(APawn* pawn)
+void APIBossController::OnPossess(APawn* pawn)
 {
-    Super::Possess(pawn);
+    Super::OnPossess(pawn);
 }
 
 FRotator APIBossController::GetControlRotation() const
@@ -255,7 +255,7 @@ void APIBossController::HomingProjectiles()
     {
         FActorSpawnParameters spawn_params;
         spawn_params.Owner = this;
-        spawn_params.Instigator = this->Instigator;
+        spawn_params.Instigator = this->GetInstigator();
 
         auto location = GetBoss()->GetWeapon()->GetMesh()->GetSocketLocation("CenterSocket");
         Fire(location, GetControlRotation(), spawn_params, m_homing_projectile);
@@ -268,7 +268,7 @@ void APIBossController::CharmProjectiles()
     {
         FActorSpawnParameters spawn_params;
         spawn_params.Owner = this;
-        spawn_params.Instigator = this->Instigator;
+        spawn_params.Instigator = this->GetInstigator();
 
         auto location = GetPosition() + FVector(0, 0, 0);
 
@@ -282,7 +282,7 @@ void APIBossController::RapidProjectiles()
     {
         FActorSpawnParameters spawn_params;
         spawn_params.Owner = this;
-        spawn_params.Instigator = this->Instigator;
+        spawn_params.Instigator = this->GetInstigator();
 
         Fire(GetPosition(), GetControlRotation(), spawn_params, m_rapid_projectile);
     }
@@ -294,7 +294,7 @@ void APIBossController::SpawnerProjectiles()
     {
         FActorSpawnParameters spawn_params;
         spawn_params.Owner = this;
-        spawn_params.Instigator = this->Instigator;
+        spawn_params.Instigator = this->GetInstigator();
 
         auto rotation = GetPlayerDirection();
         rotation.Add(0, 90, 0);
@@ -309,7 +309,7 @@ void APIBossController::AOEProjectiles(int projectiles)
     {
         FActorSpawnParameters spawn_params;
         spawn_params.Owner = this;
-        spawn_params.Instigator = this->Instigator;
+        spawn_params.Instigator = this->GetInstigator();
 
         auto rotation = GetPlayerDirection();
         auto playerHeight = GetPlayerLocation();
@@ -353,7 +353,7 @@ void APIBossController::RandAOEProjectiels(int projectiles)
         {
             FActorSpawnParameters spawn_params;
             spawn_params.Owner = this;
-            spawn_params.Instigator = this->Instigator;
+            spawn_params.Instigator = this->GetInstigator();
 
             auto attack_callback = [&, count = 0, projectiles, spawn_params]() mutable {
                 auto position = GetPosition();
@@ -386,7 +386,7 @@ void APIBossController::SpiralProjectiles()
             auto attack_callback = [&, yaw_rotation = 0.f, count = 0]() mutable {
                 FActorSpawnParameters spawn_params;
                 spawn_params.Owner = this;
-                spawn_params.Instigator = this->Instigator;
+                spawn_params.Instigator = this->GetInstigator();
 
                 Fire(GetPosition(), {0, yaw_rotation, 0}, spawn_params, m_bounce_projectile);
 
@@ -420,7 +420,7 @@ void APIBossController::ConeProjectiles()
             auto attack_callback = [&, yaw_rotation1 = 30.f, yaw_rotation2 = -30.f, rotation]() mutable {
                 FActorSpawnParameters spawn_params;
                 spawn_params.Owner = this;
-                spawn_params.Instigator = this->Instigator;
+                spawn_params.Instigator = this->GetInstigator();
 
                 Fire(GetPosition(),
                      {rotation.Pitch + 1, (rotation.Yaw + yaw_rotation1), 0},
@@ -454,7 +454,7 @@ void APIBossController::ConeProjectilesReverse()
         {
             FActorSpawnParameters spawn_params;
             spawn_params.Owner = this;
-            spawn_params.Instigator = this->Instigator;
+            spawn_params.Instigator = this->GetInstigator();
 
             auto rotation = GetPlayerDirection();
 
@@ -492,7 +492,7 @@ void APIBossController::SwipeLeftToRight()
         {
             FActorSpawnParameters spawn_params;
             spawn_params.Owner = this;
-            spawn_params.Instigator = this->Instigator;
+            spawn_params.Instigator = this->GetInstigator();
 
             auto rotation = GetPlayerDirection();
 
@@ -524,7 +524,7 @@ void APIBossController::SwipeRightToLeft()
         {
             FActorSpawnParameters spawn_params;
             spawn_params.Owner = this;
-            spawn_params.Instigator = this->Instigator;
+            spawn_params.Instigator = this->GetInstigator();
 
             auto rotation = GetPlayerDirection();
 
@@ -556,7 +556,7 @@ void APIBossController::FrontalBarage()
         {
             FActorSpawnParameters spawn_params;
             spawn_params.Owner = this;
-            spawn_params.Instigator = this->Instigator;
+            spawn_params.Instigator = this->GetInstigator();
 
             auto attack_callback = [&, count = 0, spawn_params]() mutable {
                 auto rotation = GetPlayerDirection();

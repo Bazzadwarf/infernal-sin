@@ -63,7 +63,7 @@ private:
 public:
     APIEnemyController(const FObjectInitializer& object_initializer);
 
-    virtual void Possess(APawn* pawn) override;
+    virtual void OnPossess(APawn* pawn) override;
 
     virtual void Tick(float delta_time) override;
 

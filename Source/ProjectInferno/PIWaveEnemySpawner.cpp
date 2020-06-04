@@ -17,7 +17,7 @@ void APIWaveEnemySpawner::SpawnEnemy(TSubclassOf<APIEnemy> enemy_type, APIWaveCo
         {
             FActorSpawnParameters spawn_params;
             spawn_params.Owner = parent;
-            spawn_params.Instigator = Instigator;
+            spawn_params.Instigator = GetInstigator();
 
             // CHANGE TO NEW AI CLASS
             world->SpawnActor<APIEnemy>(enemy_type, position, rotation, spawn_params);

@@ -35,7 +35,7 @@ public:
     AProjectInfernoBasicEnemyController();
 
     /* Executes right when the controller possess a Pawn */
-    virtual void Possess(APawn* pawn) override;
+    virtual void OnPossess(APawn* pawn) override;
 
     /* Sets the sensed target in the blackboard */
     void SetSeenTarget(APawn* pawn);

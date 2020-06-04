@@ -72,9 +72,9 @@ void APIPlayerController::BeginPlay()
     }
 }
 
-void APIPlayerController::Possess(APawn* pawn)
+void APIPlayerController::OnPossess(APawn* pawn)
 {
-    Super::Possess(pawn);
+    Super::OnPossess(pawn);
 
     if (pawn)
     {
@@ -86,7 +86,7 @@ void APIPlayerController::Possess(APawn* pawn)
     }
 }
 
-void APIPlayerController::UnPossess()
+void APIPlayerController::OnUnPossess()
 {
     GetWorld()->GetTimerManager().ClearTimer(m_charm_timer_handle);
 }

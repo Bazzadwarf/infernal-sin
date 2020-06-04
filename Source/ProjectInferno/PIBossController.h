@@ -109,7 +109,7 @@ public:
 
     virtual void Tick(float delta_time) override;
 
-    virtual void Possess(APawn* pawn) override;
+    virtual void OnPossess(APawn* pawn) override;
 
     virtual FRotator GetControlRotation() const override;
 
